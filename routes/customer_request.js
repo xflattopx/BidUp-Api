@@ -24,6 +24,7 @@ pool = new Pool({
     database: process.env.DB_NAME,
   
   });
+}
 
 
 router.post('/', async function (req, res, next) {
@@ -47,7 +48,7 @@ router.post('/', async function (req, res, next) {
 
   try {
       // Execute the SQL query
-      const result = await db.query(insertQuery, [
+      const result = await pool.query(insertQuery, [
           requestData.pickupLocation,
           requestData.dropOffLocation,
           requestData.description,
@@ -77,7 +78,7 @@ router.get('/all', async function (req, res, next) {
     const query = 'SELECT id, pickup_location, dropoff_location, description, preferred_delivery_time, price_offer, status FROM delivery_requests WHERE status NOT IN ($1, $2)';
 
     // Execute the query
-    const result = await db.query(query, ['Sold', 'Canceled']);
+    const result = await pool.query(query, ['Sold', 'Canceled']);
 
     // Send the result as a JSON response
     res.json(result.rows);

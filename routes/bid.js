@@ -25,9 +25,6 @@ pool = new Pool({
 
 }
 
-
-}
-
 router.use(cors());
 
 // API endpoint to record bids

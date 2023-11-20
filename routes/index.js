@@ -1,9 +1,10 @@
-var express = require('express');
-var router = express.Router();
+// Example: customer_request.js
+const express = require('express');
+const router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+// Define routes for /customer_request
+router.get('/', (req, res) => {
+  // Your route logic here
 });
 
 module.exports = router;

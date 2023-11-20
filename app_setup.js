@@ -13,13 +13,6 @@ const server = http.createServer(app);
 
 // Middleware setup
 app.use(cors());
-app.use(
-  cors({
-    origin: 'http://localhost:3000', // replace with your frontend's origin
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  })
-);
 app.use(bodyParser.json());
 
 // View engine setup
