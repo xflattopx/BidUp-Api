@@ -1,24 +1,7 @@
 // queue_service.js
 const { Pool } = require('pg');
+const pool = require('../config/config.js');
 
-let pool;
-if (process.env.NODE_ENV !== 'development') {
-// Connect to PostgreSQL database
-pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: '1234',
-  port: 5432,
-});
-} else {
-  pool = new Pool({
-    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  
-  });
 
 
 async function getUpdatedQueue() {

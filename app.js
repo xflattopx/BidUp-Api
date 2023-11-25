@@ -8,7 +8,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
 const socketIo = require('socket.io');
-
+const bcrypt = require('bcrypt');
+const dotenv = require('dotenv');
 // Import your route files
 var indexRouter = require('./routes/index.js');
 var customerRequestRouter = require('./routes/customer_request.js');
@@ -20,6 +21,7 @@ var loginRouter = require('./routes/login.js');
 
 // Create an Express application
 var app = express();
+dotenv.config();
 
 // Create an HTTP server and attach Socket.IO
 // const server = http.createServer(app);
@@ -51,6 +53,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+
 // Route setup
 app.use('/', indexRouter);
 app.use('/customer_request', customerRequestRouter);
@@ -75,6 +79,11 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error'); // Make sure you have an 'error' view file
 });
+
+const pool = require('./config/config.js');
+
+// Access the environment variable
+
 
 // Export the Express application
 module.exports = app;

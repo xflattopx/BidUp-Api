@@ -1,13 +1,18 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+const { Pool } = require('pg');
 
-module.exports = {
-  development: {
-    // ...
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_SOCKET_PATH,
-    dialect: 'postgres',
-  },
-  // ...
-};
+const envFile = process.env.NODE_ENV === 'development' ? '.env.development' : `.env.${process.env.NODE_ENV || 'local'}`;
+dotenv.config({ path: envFile });
+console.log(process.env.HOST)
+
+const pool = new Pool({
+
+    user: process.env.USER,
+    host: process.env.HOST,
+    database: process.env.DATABASE,
+    password: process.env.PASSWORD,
+    port: process.env.PORT,
+});
+
+
+module.exports = pool;

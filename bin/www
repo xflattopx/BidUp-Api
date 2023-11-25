@@ -7,16 +7,12 @@
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
+var bcrypt = require('bcrypt');
 
 /**
  * Get port from environment and store in Express.
  */
-let port;
-if (process.env.NODE_ENV !== 'development') {
-  port = 4200;
-} else {
-  port = process.env.port
-}
+let port = process.ENV.PORT || 4200;
 app.set('port', port);
 
 /**

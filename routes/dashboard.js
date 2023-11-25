@@ -3,24 +3,8 @@ const router = express.Router();
 const cors = require('cors');
 const { Pool } = require('pg');
 const cron = require('node-cron');
-let pool;
-if (process.env.NODE_ENV !== 'development') {
-// Connect to PostgreSQL database
-pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: '1234',
-  port: 5432,
-});
-} else {
-  pool = new Pool({
-    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  
-  });}
+const pool = require('../config/config.js');
+
 
 router.use(cors());
 
