@@ -15,6 +15,8 @@ var customerRequestRouter = require('./routes/customer_request.js');
 var bidRouter = require('./routes/bid.js');
 var dashboardRouter = require('./routes/dashboard.js');
 var profileRouter = require('./routes/profile.js');
+var registrationRouter = require('./routes/register.js')
+var loginRouter = require('./routes/login.js');
 
 // Create an Express application
 var app = express();
@@ -55,6 +57,8 @@ app.use('/customer_request', customerRequestRouter);
 app.use('/bid', bidRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/profile', profileRouter);
+app.use('/register', registrationRouter);
+app.use('/auth', loginRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {

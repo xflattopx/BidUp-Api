@@ -41,7 +41,7 @@ router.post('/', async function (req, res, next) {
 
   // SQL to store data in the 'requests' table
   var insertQuery = `
-  INSERT INTO delivery_requests (pickup_location, dropoff_location, description, preferred_delivery_time, price_offer, status, customer_id)
+  INSERT INTO delivery_requests (pickup_location, dropoff_location, description, preferred_delivery_time, price_offer, status, user_id)
     VALUES ($1, $2, $3, $4, $5, 'Pending', $6)
     RETURNING id
   `;
