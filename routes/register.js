@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const cors = require('cors');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 let pool;
 if (process.env.NODE_ENV !== 'development') {
@@ -35,10 +36,13 @@ router.post('/sign-up', async (req, res) => {
             return res.status(403).json({ success: false, message: "Forbidden: Invalid object being sent to /register" });
         }
 
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         // Insert user into the users table
         const user = await pool.query(
             'INSERT INTO users(email, password, role) VALUES($1, $2, $3) RETURNING id',
-            [email, password, role]
+            [email, hashedPassword, role]
         );
         let result;
 
