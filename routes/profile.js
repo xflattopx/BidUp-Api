@@ -37,6 +37,7 @@ router.get('/profile-request-details', async (req, res) => {
 
     const emailQuery = 'SELECT email FROM users WHERE id = $1';
     const emailResult = await pool.query(emailQuery, [customerId]);
+    console.log(emailResult)
 
     if (emailResult.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Customer not found' });
@@ -44,24 +45,43 @@ router.get('/profile-request-details', async (req, res) => {
 
     const customerEmail = emailResult.rows[0].email;
 
+    // const requestHistoryQuery = `
+    //   SELECT
+    //     dr.id AS ID,
+    //     dr.pickup_location AS "pickupLocation",
+    //     dr.dropoff_location AS "dropoffLocation",
+    //     dr.description AS description,
+    //     dr.preferred_delivery_time AS "preferredDeliveryTime",
+    //     dr.price_offer AS "priceOffer",
+    //     dr.status AS status
+    //   FROM
+    //     delivery_requests dr
+    //   JOIN
+    //     customers c ON dr.customer_id = c.id
+    //   JOIN
+    //     users u ON c.user_id = u.id
+    //   WHERE
+    //     u.email = $1;
+    // `;
+
     const requestHistoryQuery = `
-      SELECT
-        dr.id AS ID,
-        dr.pickup_location AS "pickupLocation",
-        dr.dropoff_location AS "dropoffLocation",
-        dr.description AS description,
-        dr.preferred_delivery_time AS "preferredDeliveryTime",
-        dr.price_offer AS "priceOffer",
-        dr.status AS status
-      FROM
-        delivery_requests dr
-      JOIN
-        customers c ON dr.customer_id = c.id
-      JOIN
-        users u ON c.user_id = u.id
-      WHERE
-        u.email = $1;
-    `;
+    SELECT
+      dr.id AS ID,
+      dr.pickup_location AS "pickupLocation",
+      dr.dropoff_location AS "dropoffLocation",
+      dr.description AS description,
+      dr.preferred_delivery_time AS "preferredDeliveryTime",
+      dr.price_offer AS "priceOffer",
+      dr.status AS status
+    FROM
+      delivery_requests dr
+    JOIN
+      customers c ON dr.user_id = c.user_id
+    JOIN
+      users u ON c.user_id = u.id
+    WHERE
+      u.email = $1;
+  `;
 
     const { rows } = await pool.query(requestHistoryQuery, [customerEmail]);
     res.json({ success: true, data: rows });
@@ -70,6 +90,39 @@ router.get('/profile-request-details', async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
+
+router.get('/profile-personal-details', async (req, res) => {
+  try {
+    const customerId = req.query.customerId;
+
+    if (!customerId) {
+      return res.status(400).json({ success: false, error: 'Missing required parameter: customerId' });
+    }
+
+    // Retrieve customer details (first_name, last_name, email) based on the customerId
+    const customerDetailsQuery = `
+      SELECT c.first_name, c.last_name, u.email
+      FROM customers c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.user_id = $1;
+    `;
+
+    const customerDetailsResult = await pool.query(customerDetailsQuery, [customerId]);
+
+    if (customerDetailsResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    const customerProfile = customerDetailsResult.rows[0];
+
+    // Return the customer profile details
+    res.json({ success: true, customerProfile });
+  } catch (error) {
+    console.error('Error fetching customer profile details:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
 
 router.post('/cancel-request', async (req, res) => {
   try {
