@@ -1,18 +1,25 @@
-const dotenv = require('dotenv');
-const { Pool } = require('pg');
+const pg = require('pg');
+const { Connector } = require('@google-cloud/cloud-sql-connector');
+let pool;
+async function main() {
+    const connector = new Connector();
+    const clientOpts = await connector.getOptions({
+        instanceConnectionName: 'bidup-405619:us-east1:postgres',
+        ipType: 'PUBLIC',
+    });
+    pool = new pg.Pool({
+        ...clientOpts,
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || '/cloudsql/bidup-405619:us-east1:postgres/.s.PGSQL.5432',
+        database: process.env.DB_DATABASE || 'postgres',
+        password: process.env.DB_PASSWORD || '1234',
+        max: 5,
+    });
 
-const envFile = process.env.NODE_ENV === 'development' ? '.env.development' : `.env.${process.env.NODE_ENV || 'local'}`;
-dotenv.config({ path: envFile });
-console.log(process.env.HOST)
+    return pool;
 
-const pool = new Pool({
+}
+module.exports = pool
 
-    user: process.env.USER,
-    host: process.env.HOST,
-    database: process.env.DATABASE,
-    password: process.env.PASSWORD,
-    port: process.env.PORT,
-});
-
-
-module.exports = pool;
+// Execute the main function
+main().catch(error => console.error('Error during database connection:', error));

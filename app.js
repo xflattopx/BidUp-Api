@@ -19,6 +19,7 @@ var profileRouter = require('./routes/profile.js');
 var registrationRouter = require('./routes/register.js')
 var loginRouter = require('./routes/login.js');
 
+
 // Create an Express application
 var app = express();
 dotenv.config();
@@ -80,7 +81,6 @@ app.use(function(err, req, res, next) {
   res.render('error'); // Make sure you have an 'error' view file
 });
 
-const pool = require('./config/config.js');
 
 // Access the environment variable
 

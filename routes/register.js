@@ -3,8 +3,23 @@ const router = express.Router();
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const pool = require('../config/config.js');
+var pool = require('../config/config.js');
+const { Connector } = require('@google-cloud/cloud-sql-connector');
 
+const connector = new Connector();
+clientOpts = (async) => connector.getOptions({
+    instanceConnectionName: 'bidup-405619:us-east1:postgres',
+    ipType: 'PUBLIC',
+});
+
+pool = new Pool({
+    ...clientOpts,
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || '34.148.8.228',
+    database: process.env.DB_DATABASE || 'postgres',
+    password: process.env.DB_PASSWORD || '1234',
+    max: 5,
+});
 
 router.use(cors());
 
@@ -21,7 +36,7 @@ router.post('/sign-up', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert user into the users table
-        const user = await pool.query(
+        const user =  await pool.query(
             'INSERT INTO users(email, password, role) VALUES($1, $2, $3) RETURNING id',
             [email, hashedPassword, role]
         );
@@ -46,6 +61,7 @@ router.post('/sign-up', async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
+
 
 
 module.exports = router;

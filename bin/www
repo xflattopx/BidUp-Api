@@ -12,7 +12,9 @@ var bcrypt = require('bcrypt');
 /**
  * Get port from environment and store in Express.
  */
-let port = process.ENV.PORT || 4200;
+const port = 8080;
+//const port = 4200
+console.log(port)
 app.set('port', port);
 
 /**
