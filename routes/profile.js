@@ -44,24 +44,6 @@ router.get('/profile-request-details', async (req, res) => {
 
     const customerEmail = emailResult.rows[0].email;
 
-    // const requestHistoryQuery = `
-    //   SELECT
-    //     dr.id AS ID,
-    //     dr.pickup_location AS "pickupLocation",
-    //     dr.dropoff_location AS "dropoffLocation",
-    //     dr.description AS description,
-    //     dr.preferred_delivery_time AS "preferredDeliveryTime",
-    //     dr.price_offer AS "priceOffer",
-    //     dr.status AS status
-    //   FROM
-    //     delivery_requests dr
-    //   JOIN
-    //     customers c ON dr.customer_id = c.id
-    //   JOIN
-    //     users u ON c.user_id = u.id
-    //   WHERE
-    //     u.email = $1;
-    // `;
 
     const requestHistoryQuery = `
     SELECT
@@ -148,6 +130,5 @@ router.post('/cancel-request', async (req, res) => {
   }
 });
 
-// ...
 
 module.exports = router;

@@ -45,8 +45,7 @@ CREATE TABLE bids (
   delivery_request_id INT, -- Foreign key referencing the delivery_requests table
   bid_price NUMERIC NOT NULL,
   bid_time TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_driver FOREIGN KEY (driver_id) REFERENCES drivers(user_id)
-,
+  CONSTRAINT fk_driver FOREIGN KEY (driver_id) REFERENCES drivers(user_id),
   CONSTRAINT fk_delivery_request FOREIGN KEY (delivery_request_id) REFERENCES delivery_requests(id) -- Updated foreign key
 );
 
