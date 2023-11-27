@@ -3,34 +3,36 @@ const router = express.Router();
 const cors = require('cors');
 const { Pool } = require('pg');
 const cron = require('node-cron');
-
-let pool;
-if (process.env.NODE_ENV !== 'development') {
-// Connect to PostgreSQL database
-pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: '1234',
-  port: 5432,
-});
-} else {
-  pool = new Pool({
-    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  
+//const pool = require('../config/config.js');
+var pool = require('../config/config.js');
+const { Connector } = require('@google-cloud/cloud-sql-connector');
+let clientOpts;
+const connector = new Connector();
+if(process.env.ENV_NODE === 'development'){
+  const connector = new Connector();
+  clientOpts = (async) => connector.getOptions({
+      instanceConnectionName: 'bidup-405619:us-east1:postgres',
+      ipType: 'PUBLIC',
   });
-
 }
+
+pool = new Pool({
+    ...clientOpts,
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || '34.148.8.228',
+    database: process.env.DB_DATABASE || 'postgres',
+    password: process.env.DB_PASSWORD || '1234',
+    port: 5432,
+    max: 5,
+});
 
 router.use(cors());
 
 // API endpoint to record bids
 router.post('/record-bid', async (req,res,next) => {
     const { deliveryRequestId, driverId, bidPrice } = req.body;
-    console.log(deliveryRequestId)
+    console.log('driverId' + driverId)
+    console.log('deliveryId' + deliveryRequestId)
     try {
       // Step 1: Update bid_end_time in delivery_requests
       const bidEndTimeUpdateQuery = `
@@ -41,18 +43,18 @@ router.post('/record-bid', async (req,res,next) => {
       `;
   
       const bidEndTimeUpdateResult = await pool.query(bidEndTimeUpdateQuery, [deliveryRequestId]);
-      console.log(bidEndTimeUpdateQuery)
+      
       // Check if the bid_end_time was updated successfully
       if (bidEndTimeUpdateResult.rowCount === 0) {
         return res.status(404).json({ success: false, message: 'Delivery request not found.' });
       }
   
       const requestId = bidEndTimeUpdateResult.rows[0].id;
-  
+      console.log(requestId)
       // Step 2: Insert the bid into the bids table
       const insertBidQuery = `
-        INSERT INTO bids (driver_id, delivery_request_id, bid_price, status)
-        VALUES ($1, $2, $3, 'Bidding')
+        INSERT INTO bids (driver_id, delivery_request_id, bid_price)
+        VALUES ($1, $2, $3)
         RETURNING id;
       `;
   
@@ -91,18 +93,18 @@ router.post('/update-bid', async (req, res) => {
     const { bid_price, delivery_request_id, driver_id } = bidDetailsResult.rows[0];
 
     // Check if the provided driverId matches the driver who placed the original bid
-    if (driverId !== driver_id) {
-      return res.status(403).json({ success: false, message: 'Unauthorized. You cannot update bids placed by other drivers.' });
-    }
+    // if (driverId !== driver_id) {
+    //   return res.status(403).json({ success: false, message: 'Unauthorized. You cannot update bids placed by other drivers.' });
+    // }
 
     // Update the bid_price in the bids table
     const updateBidPriceQuery = `
       UPDATE bids
-      SET bid_price = $1
+      SET bid_price = $1, driver_id = $3
       WHERE delivery_request_id = $2;
     `;
 
-    await pool.query(updateBidPriceQuery, [newBidPrice, bidId]);
+    await pool.query(updateBidPriceQuery, [newBidPrice, bidId, driverId]);
   
     // Update the bid_price in the delivery_requests table
     const updateDeliveryRequestPriceQuery = `

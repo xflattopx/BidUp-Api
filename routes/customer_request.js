@@ -3,28 +3,30 @@ var router = express.Router();
 const cors = require('cors');
 var { Pool } = require('pg');
 const bodyParser = require('body-parser');
-
-router.use(cors());
-// Connect to PostgreSQL database
-let pool;
-if (process.env.NODE_ENV !== 'development') {
-// Connect to PostgreSQL database
-pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: '1234',
-  port: 5432,
-});
-} else {
-  pool = new Pool({
-    host: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  
+//const pool = require('../config/config.js');
+var pool = require('../config/config.js');
+const { Connector } = require('@google-cloud/cloud-sql-connector');
+let clientOpts;
+const connector = new Connector();
+if(process.env.ENV_NODE === 'development'){
+  const connector = new Connector();
+  clientOpts = (async) => connector.getOptions({
+      instanceConnectionName: 'bidup-405619:us-east1:postgres',
+      ipType: 'PUBLIC',
   });
 }
+
+pool = new Pool({
+  ...clientOpts,
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || '34.148.8.228',
+  database: process.env.DB_DATABASE || 'postgres',
+  password: process.env.DB_PASSWORD || '1234',
+  port: 5432,
+  max: 5,
+});
+
+router.use(cors());
 
 
 router.post('/', async function (req, res, next) {
@@ -41,13 +43,14 @@ router.post('/', async function (req, res, next) {
 
   // SQL to store data in the 'requests' table
   var insertQuery = `
-  INSERT INTO delivery_requests (pickup_location, dropoff_location, description, preferred_delivery_time, price_offer, status, customer_id)
+  INSERT INTO delivery_requests (pickup_location, dropoff_location, description, preferred_delivery_time, price_offer, status, user_id)
     VALUES ($1, $2, $3, $4, $5, 'Pending', $6)
     RETURNING id
   `;
 
   try {
       // Execute the SQL query
+      
       const result = await pool.query(insertQuery, [
           requestData.pickupLocation,
           requestData.dropOffLocation,
