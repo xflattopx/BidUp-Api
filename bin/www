@@ -8,15 +8,13 @@ var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
 
+
 /**
  * Get port from environment and store in Express.
  */
-let port;
-if (process.env.NODE_ENV !== 'development') {
-  port = 4200;
-} else {
-  port = process.env.port
-}
+const port = process.env.PORT || 4200;
+//const port = 4200
+console.log(port)
 app.set('port', port);
 
 /**
