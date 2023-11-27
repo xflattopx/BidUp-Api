@@ -8,8 +8,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
 const socketIo = require('socket.io');
-const bcrypt = require('bcrypt');
-const dotenv = require('dotenv');
 // Import your route files
 var indexRouter = require('./routes/index.js');
 var customerRequestRouter = require('./routes/customer_request.js');
@@ -18,11 +16,21 @@ var dashboardRouter = require('./routes/dashboard.js');
 var profileRouter = require('./routes/profile.js');
 var registrationRouter = require('./routes/register.js')
 var loginRouter = require('./routes/login.js');
+var dotenv = require('dotenv');
+dotenv.config();
+
+// Load environment variables from the appropriate .env file
+const envFile =
+  process.env.NODE_ENV === 'development'
+    ? '.env.development'
+    : '.env.local'
+console.log(process.env.NODE_ENV)
 
 
 // Create an Express application
 var app = express();
-dotenv.config();
+
+
 
 // Create an HTTP server and attach Socket.IO
 // const server = http.createServer(app);

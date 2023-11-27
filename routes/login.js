@@ -7,12 +7,16 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 var pool = require('../config/config.js');
 const { Connector } = require('@google-cloud/cloud-sql-connector');
+let clientOpts;
+if(process.env.ENV_NODE === 'development'){
+    const connector = new Connector();
+    clientOpts = (async) => connector.getOptions({
+        instanceConnectionName: 'bidup-405619:us-east1:postgres',
+        ipType: 'PUBLIC',
+    });
+}
 
-const connector = new Connector();
-clientOpts = (async) => connector.getOptions({
-    instanceConnectionName: 'bidup-405619:us-east1:postgres',
-    ipType: 'PUBLIC',
-});
+console.log(process.env.DB)
 
 pool = new Pool({
     ...clientOpts,
@@ -20,14 +24,15 @@ pool = new Pool({
     host: process.env.DB_HOST || '34.148.8.228',
     database: process.env.DB_DATABASE || 'postgres',
     password: process.env.DB_PASSWORD || '1234',
+    port: 5432,
     max: 5,
-});
+  });
 
 router.use(cors());
 router.use(express.json());
 
 router.post('/get-user', async (req, res, next) => {
-    console.log(process.env.NODE_ENV)
+
     const { email, password } = req.body;
 
         try {
@@ -47,10 +52,9 @@ router.post('/get-user', async (req, res, next) => {
                     const email = user.email;
                     let tokenPayload;
 
-                    const passwordMatch = await bcrypt.compare(password, user.password);
+                    //const passwordMatch = await bcrypt.compare(password, user.password);
 
                     if (passwordMatch) {
-
 
                         // Check if the user is a customer
                         const customerResult = await pool.query('SELECT * FROM customers WHERE user_id = $1', [user.id]);

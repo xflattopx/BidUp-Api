@@ -7,12 +7,12 @@
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
-var bcrypt = require('bcrypt');
+
 
 /**
  * Get port from environment and store in Express.
  */
-const port = 8080;
+const port = process.env.PORT || 4200;
 //const port = 4200
 console.log(port)
 app.set('port', port);

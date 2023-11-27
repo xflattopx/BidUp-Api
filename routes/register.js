@@ -5,12 +5,14 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 var pool = require('../config/config.js');
 const { Connector } = require('@google-cloud/cloud-sql-connector');
-
-const connector = new Connector();
-clientOpts = (async) => connector.getOptions({
-    instanceConnectionName: 'bidup-405619:us-east1:postgres',
-    ipType: 'PUBLIC',
-});
+let clientOpts;
+if(process.env.ENV_NODE === 'development'){
+    const connector = new Connector();
+    clientOpts = (async) => connector.getOptions({
+        instanceConnectionName: 'bidup-405619:us-east1:postgres',
+        ipType: 'PUBLIC',
+    });
+}
 
 pool = new Pool({
     ...clientOpts,
@@ -18,8 +20,9 @@ pool = new Pool({
     host: process.env.DB_HOST || '34.148.8.228',
     database: process.env.DB_DATABASE || 'postgres',
     password: process.env.DB_PASSWORD || '1234',
+    port: 5432,
     max: 5,
-});
+  });
 
 router.use(cors());
 
@@ -36,7 +39,7 @@ router.post('/sign-up', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert user into the users table
-        const user =  await pool.query(
+        const user = await pool.query(
             'INSERT INTO users(email, password, role) VALUES($1, $2, $3) RETURNING id',
             [email, hashedPassword, role]
         );
