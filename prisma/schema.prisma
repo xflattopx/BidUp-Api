@@ -68,10 +68,10 @@ model Bid {
 }
 
 model WinningBid {
-  deliveryRequestId Int
+  delivery_request_id Int
   bid_id            Int             @unique
-  delivery_request  DeliveryRequest @relation(fields: [deliveryRequestId], references: [id])
+  delivery_request  DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
   Bid               Bid             @relation(fields: [bid_id], references: [id])
 
-  @@id([deliveryRequestId])
+  @@id([delivery_request_id])
 }
