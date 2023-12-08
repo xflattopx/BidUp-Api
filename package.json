@@ -9,6 +9,7 @@
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.0",
     "@google-cloud/secret-manager": "^5.0.1",
+    "@prisma/client": "^3.15.2",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cookie-parser": "~1.4.4",
@@ -28,5 +29,8 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^3.15.2"
   }
 }

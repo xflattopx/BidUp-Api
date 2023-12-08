@@ -1,11 +1,11 @@
-ersion: '3.8'
+version: '3.8'
 services:
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_USER: time_user
-      POSTGRES_PASSWORD: time_password
-      POSTGRES_DB: time_db
+      POSTGRES_USER: bidup_user
+      POSTGRES_PASSWORD: bidup_password
+      POSTGRES_DB: bidup_db
     ports:
       - "5432:5432"
     volumes:

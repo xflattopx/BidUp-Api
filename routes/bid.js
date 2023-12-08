@@ -18,10 +18,10 @@ if(process.env.ENV_NODE === 'development'){
 
 pool = new Pool({
     ...clientOpts,
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || '34.148.8.228',
-    database: process.env.DB_DATABASE || 'postgres',
-    password: process.env.DB_PASSWORD || '1234',
+    user: process.env.DB_USER || 'time_user',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_DATABASE || 'time_db',
+    password: process.env.DB_PASSWORD || 'time_password',
     port: 5432,
     max: 5,
 });
