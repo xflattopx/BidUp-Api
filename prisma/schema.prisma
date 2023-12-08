@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  password         String
+  role             String
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @default(now())
+  Customer         Customer?
+  Driver           Driver?
+  DeliveryRequests DeliveryRequest[]
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @unique
+  first_name String
+  last_name  String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  User       User     @relation(fields: [user_id], references: [id])
+}
+
+model Driver {
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  User       User     @relation(fields: [user_id], references: [id])
+  Bids       Bid[]
+}
+
+model DeliveryRequest {
+  id                      Int         @id @default(autoincrement())
+  pickup_location         String
+  dropoff_location        String
+  description             String
+  preferred_delivery_time DateTime
+  price_offer             Float       @default(0)
+  status                  String      @default("Pending")
+  user_id                 Int?
+  created_at              DateTime    @default(now())
+  updated_at              DateTime    @default(now())
+  bid_end_time            DateTime?
+  User                    User?       @relation(fields: [user_id], references: [id])
+  Bids                    Bid[]
+  WinningBid              WinningBid?
+}
+
+model Bid {
+  id                  Int              @id @default(autoincrement())
+  driver_id           Int?
+  delivery_request_id Int?
+  bid_price           Float
+  bid_time            DateTime         @default(now())
+  status              String           @default("Pending")
+  Driver              Driver?          @relation(fields: [driver_id], references: [user_id])
+  delivery_requests   DeliveryRequest? @relation(fields: [delivery_request_id], references: [id])
+  WinningBid          WinningBid?
+}
+
+model WinningBid {
+  delivery_request_id Int
+  bid_id            Int             @unique
+  delivery_request  DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
+  Bid               Bid             @relation(fields: [bid_id], references: [id])
+
+  @@id([delivery_request_id])
+}

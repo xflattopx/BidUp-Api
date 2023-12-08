@@ -1,28 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
-const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-var pool = require('../config/config.js');
-const { Connector } = require('@google-cloud/cloud-sql-connector');
-let clientOpts;
-if(process.env.ENV_NODE === 'development'){
-    const connector = new Connector();
-    clientOpts = (async) => connector.getOptions({
-        instanceConnectionName: 'bidup-405619:us-east1:postgres',
-        ipType: 'PUBLIC',
-    });
-}
+const { PrismaClient } = require('@prisma/client');
 
-pool = new Pool({
-    ...clientOpts,
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || '34.148.8.228',
-    database: process.env.DB_DATABASE || 'postgres',
-    password: process.env.DB_PASSWORD || '1234',
-    port: 5432,
-    max: 5,
-  });
+const prisma = new PrismaClient();
 
 router.use(cors());
 
@@ -30,41 +12,45 @@ router.post('/sign-up', async (req, res) => {
     try {
         const { first_name, last_name, email, password, role } = req.body;
 
-        // Check if required fields are present
-        if (!role || !first_name || !last_name || !email || !password) {
-            return res.status(403).json({ success: false, message: "Forbidden: Invalid object being sent to /register" });
+        if (!email || !password || !role || (role === 'Customer' && (!first_name || !last_name))) {
+            return res.status(400).json({ success: false, message: "Bad Request: Missing required fields" });
         }
 
-        // Hash the password
+        if (role !== 'Driver' && role !== 'Customer') {
+            return res.status(400).json({ success: false, message: "Bad Request: Invalid role" });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert user into the users table
-        const user = await pool.query(
-            'INSERT INTO users(email, password, role) VALUES($1, $2, $3) RETURNING id',
-            [email, hashedPassword, role]
-        );
-        let result;
+        const newUser = await prisma.user.create({
+            data: {
+                email: email,
+                password: hashedPassword,
+                role: role,
+            },
+        });
 
-        // Insert information based on role
         if (role === 'Driver') {
-            result = await pool.query(
-                'INSERT INTO drivers(user_id) VALUES($1) RETURNING id',
-                [user.rows[0].id]
-            );
+            await prisma.driver.create({ data: { user_id: newUser.id } });
         } else {
-            result = await pool.query(
-                'INSERT INTO customers(user_id, first_name, last_name) VALUES($1, $2, $3) RETURNING id',
-                [user.rows[0].id, first_name, last_name]
-            );
+            await prisma.customer.create({
+                data: {
+                    user_id: newUser.id,
+                    first_name: first_name,
+                    last_name: last_name,
+                },
+            });
         }
 
-        return res.status(201).json({ success: true, message: "User registered successfully", userId: user.rows[0].id, role });
+        return res.status(201).json({ success: true, message: "User registered successfully", userId: newUser.id, role });
     } catch (error) {
+        if (error.code === "P2002") {
+            return res.status(409).json({ success: false, message: "Conflict: Email already exists" });
+        }
         console.error('Error during registration:', error);
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
-
 
 
 module.exports = router;

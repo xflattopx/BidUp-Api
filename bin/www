@@ -13,8 +13,8 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 const port = process.env.PORT || 4200;
+
 //const port = 4200
-console.log(port)
 app.set('port', port);
 
 /**

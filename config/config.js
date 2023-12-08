@@ -12,10 +12,10 @@ async function main() {
 }
     pool = new pg.Pool({
         ...clientOpts,
-        user: process.env.DB_USER || 'postgres',
+        user: process.env.DB_USER || 'time_user',
         host: process.env.DB_HOST ||  'localhost',//'/cloudsql/bidup-405619:us-east1:postgres/.s.PGSQL.5432',
-        database: process.env.DB_DATABASE || 'postgres',
-        password: process.env.DB_PASSWORD || '1234',
+        database: process.env.DB_DATABASE || 'time_db',
+        password: process.env.DB_PASSWORD || 'time_password',
         port: process.env.DB_PORT || 5432,
         max: 5,
     });

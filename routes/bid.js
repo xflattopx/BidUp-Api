@@ -1,121 +1,72 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
-const { Pool } = require('pg');
 const cron = require('node-cron');
-//const pool = require('../config/config.js');
-var pool = require('../config/config.js');
-const { Connector } = require('@google-cloud/cloud-sql-connector');
-let clientOpts;
-const connector = new Connector();
-if(process.env.ENV_NODE === 'development'){
-  const connector = new Connector();
-  clientOpts = (async) => connector.getOptions({
-      instanceConnectionName: 'bidup-405619:us-east1:postgres',
-      ipType: 'PUBLIC',
-  });
-}
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-pool = new Pool({
-    ...clientOpts,
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || '34.148.8.228',
-    database: process.env.DB_DATABASE || 'postgres',
-    password: process.env.DB_PASSWORD || '1234',
-    port: 5432,
-    max: 5,
-});
 
 router.use(cors());
 
-// API endpoint to record bids
-router.post('/record-bid', async (req,res,next) => {
-    const { deliveryRequestId, driverId, bidPrice } = req.body;
-    console.log('driverId' + driverId)
-    console.log('deliveryId' + deliveryRequestId)
-    try {
-      // Step 1: Update bid_end_time in delivery_requests
-      const bidEndTimeUpdateQuery = `
-        UPDATE delivery_requests
-        SET bid_end_time = CURRENT_TIMESTAMP + INTERVAL '5 minutes', status = 'Bidding'
-        WHERE id = $1
-        RETURNING id;
-      `;
-  
-      const bidEndTimeUpdateResult = await pool.query(bidEndTimeUpdateQuery, [deliveryRequestId]);
-      
-      // Check if the bid_end_time was updated successfully
-      if (bidEndTimeUpdateResult.rowCount === 0) {
-        return res.status(404).json({ success: false, message: 'Delivery request not found.' });
-      }
-  
-      const requestId = bidEndTimeUpdateResult.rows[0].id;
-      console.log(requestId)
-      // Step 2: Insert the bid into the bids table
-      const insertBidQuery = `
-        INSERT INTO bids (driver_id, delivery_request_id, bid_price)
-        VALUES ($1, $2, $3)
-        RETURNING id;
-      `;
-  
-      const insertBidResult = await pool.query(insertBidQuery, [driverId, deliveryRequestId, bidPrice]);
-      // Check if the bid was inserted successfully
-      if (insertBidResult.rowCount === 0) {
-        return res.status(500).json({ success: false, message: 'Error recording bid.' });
-      }
-  
-      // Respond with success
-      res.json({ success: true, message: 'Bid recorded successfully.', requestId: requestId });
-    } catch (error) {
-      console.error('Error recording bid:', error);
-      res.status(500).json({ success: false, message: 'Internal server error.' });
-    }
-  });
 
- // API endpoint to update a bid
+router.post('/record-bid', async (req, res, next) => {
+  const { deliveryRequestId, driverId, bidPrice } = req.body;
+
+  try {
+    const deliveryRequest = await prisma.deliveryRequest.update({
+      where: { id: deliveryRequestId },
+      data: {
+        bid_end_time: new Date(),
+        status: 'Bidding'
+      }
+    });
+
+    if (!deliveryRequest) {
+      return res.status(404).json({ success: false, message: 'Delivery request not found.' });
+    }
+
+    const bid = await prisma.bid.create({
+      data: {
+        driver_id: driverId,
+        delivery_request_id: deliveryRequestId,
+        bid_price: bidPrice
+      }
+    });
+
+    res.json({ success: true, message: 'Bid recorded successfully.', requestId: deliveryRequestId });
+  } catch (error) {
+    console.error('Error recording bid:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
+
 router.post('/update-bid', async (req, res) => {
   const { bidId, newBidPrice, driverId } = req.body;
-  console.log(bidId)
-  try {
-    // Fetch the bid details including the current bid_price
-    const getBidDetailsQuery = `
-      SELECT bid_price, delivery_request_id, driver_id
-      FROM bids
-      WHERE delivery_request_id = $1;
-    `;
 
-    const bidDetailsResult = await pool.query(getBidDetailsQuery, [bidId]);
-    console.log(bidDetailsResult);
-    if (bidDetailsResult.rowCount === 0) {
+  try {
+    const bid = await prisma.bid.findUnique({
+      where: { id: bidId }
+    });
+
+    if (!bid) {
       return res.status(404).json({ success: false, message: 'Bid not found.' });
     }
 
-    const { bid_price, delivery_request_id, driver_id } = bidDetailsResult.rows[0];
+    await prisma.bid.update({
+      where: { id: bidId },
+      data: {
+        bid_price: newBidPrice,
+        driver_id: driverId
+      }
+    });
 
-    // Check if the provided driverId matches the driver who placed the original bid
-    // if (driverId !== driver_id) {
-    //   return res.status(403).json({ success: false, message: 'Unauthorized. You cannot update bids placed by other drivers.' });
-    // }
+    await prisma.deliveryRequest.update({
+      where: { id: bid.delivery_request_id },
+      data: {
+        price_offer: newBidPrice
+      }
+    });
 
-    // Update the bid_price in the bids table
-    const updateBidPriceQuery = `
-      UPDATE bids
-      SET bid_price = $1, driver_id = $3
-      WHERE delivery_request_id = $2;
-    `;
-
-    await pool.query(updateBidPriceQuery, [newBidPrice, bidId, driverId]);
-  
-    // Update the bid_price in the delivery_requests table
-    const updateDeliveryRequestPriceQuery = `
-      UPDATE delivery_requests
-      SET price_offer = $1
-      WHERE id = $2;
-    `;
-
-    await pool.query(updateDeliveryRequestPriceQuery, [newBidPrice, delivery_request_id]);
-
-    // Respond with success
     res.json({ success: true, message: 'Bid updated successfully.' });
   } catch (error) {
     console.error('Error updating bid:', error);
@@ -123,99 +74,96 @@ router.post('/update-bid', async (req, res) => {
   }
 });
 
-  // API endpoint to record the winning bid
 router.post('/record-winning-bid', async (req, res) => {
-    const { bidId } = req.body;
-   // console.log(bidId)
-    try {
-      // Update the status in the bids table to "Sold"
-      const updateBidStatusQuery = `
-        UPDATE bids
-        SET status = 'Bidding'
-        WHERE delivery_request_id = $1
-        RETURNING delivery_request_id;
-      `;
-  
-      const updateBidStatusResult = await pool.query(updateBidStatusQuery, [bidId]);
-  
-      // Check if the bid status was updated successfully
-      if (updateBidStatusResult.rowCount === 0) {
-        console.log(updateBidStatusQuery)
-        return res.status(404).json({ success: false, message: 'Bid not found.' });
-      }
-  
-      const deliveryRequestId = updateBidStatusResult.rows[0].delivery_request_id;
-  
-      // Update the status in the delivery_requests table to "Sold"
-      const updateDeliveryRequestStatusQuery = `
-        UPDATE delivery_requests
-        SET status = 'Bidding'
-        WHERE id = $1;
-      `;
-  
-      await pool.query(updateDeliveryRequestStatusQuery, [deliveryRequestId]);
-  
-      // Respond with success
-      res.json({ success: true, message: 'Winning bid recorded successfully.' });
-    } catch (error) {
-      console.error('Error recording winning bid:', error);
-      res.status(500).json({ success: false, message: 'Internal server error.' });
+  const { bidId } = req.body;
+
+  try {
+    const updatedBid = await prisma.bid.update({
+      where: { id: bidId },
+      data: { status: 'Bidding' }
+    });
+
+    if (!updatedBid) {
+      return res.status(404).json({ success: false, message: 'Bid not found.' });
     }
-  });
+
+    await prisma.deliveryRequest.update({
+      where: { id: updatedBid.delivery_request_id },
+      data: { status: 'Bidding' }
+    });
+
+    res.json({ success: true, message: 'Winning bid recorded successfully.' });
+  } catch (error) {
+    console.error('Error recording winning bid:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
+
 
 // Schedule a task to check bids every minute
 cron.schedule('* * * * *', async () => {
   try {
-    // Get the bids that are still pending and their bid end times are in the past
-    const checkBidsQuery = `
-      UPDATE bids
-      SET status = 'Sold'
-      FROM delivery_requests
-      WHERE bids.status = 'Bidding'
-        AND bids.bid_time + interval '5 minutes' <= CURRENT_TIMESTAMP
-        AND bids.delivery_request_id = delivery_requests.id
-        AND delivery_requests.status = 'Bidding'
-      RETURNING bids.id as bid_id, bids.driver_id, delivery_requests.id as delivery_request_id;
-    `;
+    // Step 1: Fetch eligible bids
+    const bidsToUpdate = await prisma.bid.findMany({
+      where: {
+        status: 'Bidding',
+        bid_time: {
+          lt: new Date(Date.now() - 5 * 60000) // 5 minutes ago
+        },
+        delivery_requests: { // Corrected relationship field name
+          status: 'Bidding'
+        }
+      },
+      include: {
+        delivery_requests: true // Corrected relationship field name
+      }
+    });
 
-    const result = await pool.query(checkBidsQuery);
-    //console.log(result);
+    // Step 2: Update fetched bids status to 'Sold'
+    for (const bid of bidsToUpdate) {
+      await prisma.bid.update({
+        where: { id: bid.id },
+        data: { status: 'Sold' }
+      });
 
-    if (result.rowCount > 0) {
-      console.log('Updated bids with status "Sold"');
+    }
 
-      // Store delivery_request_ids from the checkBidsQuery result
-      const processedDeliveryRequests = result.rows.map((row) => row.delivery_request_id);
+    // Step 3: Process each bid
+    for (const bid of bidsToUpdate) {
+      // Check if a winning bid already exists
+      const existingWinningBid = await prisma.winningBid.findUnique({
+        where: {
+          delivery_request_id: bid.delivery_request_id
+        }
+      });
 
-      // Iterate through the updated bids and insert them into winning_bids table
-      for (const row of result.rows) {
-        const { bid_id, driver_id, delivery_request_id } = row;
-
-        const insertWinningBidQuery = `
-        INSERT INTO winning_bids (bid_id, delivery_request_id)
-        VALUES ($1, $2)
-        ON CONFLICT (delivery_request_id) DO NOTHING;        
-        `;
-
-        // Insert winning bid into winning_bids table
-        await pool.query(insertWinningBidQuery, [bid_id, delivery_request_id]);
-
-        console.log(`Inserted winning bid with bid_id ${bid_id} into winning_bids`);
+      // If no winning bid exists, insert a new one
+      if (!existingWinningBid) {
+        await prisma.winningBid.create({
+          data: {
+            bid_id: bid.id, // Assuming this is the correct field name
+            delivery_request_id: bid.delivery_request_id
+          }
+        }).catch(error => {
+          // Handle any other errors
+          console.error('Error inserting winning bid:', error);
+        });
       }
 
-      // Update the status of delivery_requests to 'Sold' for the processed bids
-      const updateDeliveryRequestsQuery = `
-        UPDATE delivery_requests
-        SET status = 'Sold'
-        WHERE id IN (${processedDeliveryRequests.join(',')});
-      `;
-      await pool.query(updateDeliveryRequestsQuery);
+      // Update corresponding delivery request status to 'Sold'
+      await prisma.deliveryRequest.update({
+        where: { id: bid.delivery_request_id },
+        data: { status: 'Sold' }
+      });
     }
+
+
   } catch (error) {
-    console.error('Error checking and inserting winning bids:', error);
+    console.error('Error in CRON job:', error);
   }
 });
 
 
 
-  module.exports = router;
+
+module.exports = router;
