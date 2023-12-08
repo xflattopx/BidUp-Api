@@ -4,7 +4,10 @@
   "private": true,
   "main": "./bin/www",
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "db:reset": "npx prisma migrate reset",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.0",

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 router.use(cors());
 
-// API endpoint to record bids
+
 router.post('/record-bid', async (req, res, next) => {
   const { deliveryRequestId, driverId, bidPrice } = req.body;
 
@@ -40,7 +40,6 @@ router.post('/record-bid', async (req, res, next) => {
   }
 });
 
-// API endpoint to update a bid
 router.post('/update-bid', async (req, res) => {
   const { bidId, newBidPrice, driverId } = req.body;
 
@@ -75,8 +74,6 @@ router.post('/update-bid', async (req, res) => {
   }
 });
 
-
-// API endpoint to record the winning bid
 router.post('/record-winning-bid', async (req, res) => {
   const { bidId } = req.body;
 
@@ -133,16 +130,25 @@ cron.schedule('* * * * *', async () => {
 
     // Step 3: Process each bid
     for (const bid of bidsToUpdate) {
-      // Insert winning bid
-      await prisma.winningBid.create({
-        data: {
-          bidId: bid.id, // Assuming this is the correct field name
-          deliveryRequestId: bid.delivery_request_id // Corrected field name
+      // Check if a winning bid already exists
+      const existingWinningBid = await prisma.winningBid.findUnique({
+        where: {
+          delivery_request_id: bid.delivery_request_id
         }
-      }).catch(error => {
-        // Handle unique constraint violation (duplicate entry)
-        console.error('Error inserting winning bid:', error);
       });
+
+      // If no winning bid exists, insert a new one
+      if (!existingWinningBid) {
+        await prisma.winningBid.create({
+          data: {
+            bid_id: bid.id, // Assuming this is the correct field name
+            delivery_request_id: bid.delivery_request_id
+          }
+        }).catch(error => {
+          // Handle any other errors
+          console.error('Error inserting winning bid:', error);
+        });
+      }
 
       // Update corresponding delivery request status to 'Sold'
       await prisma.deliveryRequest.update({
@@ -150,6 +156,7 @@ cron.schedule('* * * * *', async () => {
         data: { status: 'Sold' }
       });
     }
+
 
   } catch (error) {
     console.error('Error in CRON job:', error);

@@ -34,12 +34,22 @@ router.get('/accepted-bids', async (req, res) => {
       }
     });
 
-    res.json(acceptedBids);
+    // Format the response to match the expected structure in the frontend
+    const formattedBids = acceptedBids.map(bid => ({
+      delivery_request_id: bid.id,
+      pickup_location: bid.pickup_location,
+      dropoff_location: bid.dropoff_location,
+      description: bid.description,
+      price_offer: bid.price_offer
+    }));
+
+    res.json(formattedBids);
   } catch (error) {
     console.error('Error fetching accepted bids:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
   module.exports = router;
