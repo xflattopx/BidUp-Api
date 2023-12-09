@@ -106,6 +106,21 @@ class Cognito {
             throw error; // Optionally rethrow to be handled by the caller
         }
     }
+
+    async doesUserExist(email) {
+        const params = {
+            UserPoolId: userPoolId, // Replace with your Cognito User Pool ID
+            Filter: `email = "${email}"`,
+        };
+
+        try {
+            const response = await this.cognitoIdentityServiceProvider.listUsers(params).promise();
+            return response.Users.length > 0;
+        } catch (error) {
+            console.error('Error in checking user existence:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = Cognito;

@@ -21,16 +21,27 @@ router.post('/sign-up', async (req, res) => {
             return res.status(400).json({ success: false, message: "Bad Request: Invalid role" });
         }
 
+        // Check if user already exists in Cognito
+        const userExists = await cognito.doesUserExist(email);
+        if (userExists) {
+            return res.status(409).json({ success: false, message: "Conflict: Email already exists in Cognito" });
+        }
+
         // Register user in AWS Cognito
-        await cognito.signUp(email, password);
+        const cognitoResponse = await cognito.signUp(email, password);
+
+        // Extract cognitoId (User Sub) from the response
+        const cognitoId = cognitoResponse.UserSub;
 
         // Todo: Remove later when adding a confirmation for registration 
         await cognito.adminConfirmSignUp(email);
 
+        // Create user in the database with cognitoId
         const newUser = await prisma.user.create({
             data: {
                 email: email,
                 role: role,
+                cognitoId: cognitoId, // Storing the Cognito ID
             },
         });
 
