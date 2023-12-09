@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
+const Cognito = require('../classes/cognito'); // Import the Cognito class
 
 const prisma = new PrismaClient();
+const cognito = new Cognito(); // Instantiate the Cognito class
 
 router.use(cors());
 
@@ -20,12 +21,15 @@ router.post('/sign-up', async (req, res) => {
             return res.status(400).json({ success: false, message: "Bad Request: Invalid role" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Register user in AWS Cognito
+        await cognito.signUp(email, password);
+
+        // Todo: Remove later when adding a confirmation for registration 
+        await cognito.adminConfirmSignUp(email);
 
         const newUser = await prisma.user.create({
             data: {
                 email: email,
-                password: hashedPassword,
                 role: role,
             },
         });
@@ -51,6 +55,5 @@ router.post('/sign-up', async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
-
 
 module.exports = router;
