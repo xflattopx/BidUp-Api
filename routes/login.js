@@ -15,7 +15,6 @@ router.post('/get-user', async (req, res) => {
   const {email, password} = req.body;
 
   try {
-    // Use Cognito for user authentication
     const authResponse = await cognito.signIn(email, password);
 
     if (authResponse && authResponse.AuthenticationResult) {

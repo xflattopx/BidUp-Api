@@ -72,7 +72,6 @@ router.get('/profile-personal-details', async (req, res) => {
           .json({success: false, error: 'Customer not found'});
     }
 
-    // Combine customer details with email
     const response = {
       first_name: customerProfile.first_name,
       last_name: customerProfile.last_name,
