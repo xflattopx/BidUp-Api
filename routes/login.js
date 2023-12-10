@@ -1,44 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
+const Cognito = require('../classes/cognito'); // Import the Cognito class
 
 const prisma = new PrismaClient();
+const cognito = new Cognito(); // Instantiate the Cognito class
 
 router.use(cors());
 router.use(express.json());
 
-router.post('/get-user', async (req, res, next) => {
+router.post('/get-user', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await prisma.user.findUnique({
-            where: { email: email },
-        });
+        // Use Cognito for user authentication
+        const authResponse = await cognito.signIn(email, password);
 
-        if (user && await bcrypt.compare(password, user.password)) {
-            const tokenPayload = {
-                userId: user.id,
-                email: user.email,
-                role: user.role,
-                // Add any additional role-specific information here
-            };
+        if (authResponse && authResponse.AuthenticationResult) {
+            const token = authResponse.AuthenticationResult.AccessToken;
+            const user = await prisma.user.findUnique({
+                where: { email: email },
+            });
 
-            const secretKey = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
-            const token = jwt.sign(tokenPayload, secretKey, { expiresIn: '1800s' });
-
-            res.status(200).json({ token, role: user.role, user_id: user.id, email });
+            if (user) {
+                res.status(200).json({ token, role: user.role, user_id: user.id, email });
+            } else {
+                res.status(404).json({ error: 'User not found' });
+            }
         } else {
             res.status(401).json({ error: 'Invalid credentials' });
         }
     } catch (error) {
-        console.error('Error getting user:', error);
+        console.error('Error in user authentication:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 module.exports = router;
