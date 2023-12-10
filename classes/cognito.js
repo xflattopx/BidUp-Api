@@ -3,13 +3,13 @@ const AWS = require('aws-sdk');
 const region = process.env.AWS_REGION;
 const userPoolId = process.env.COGNITO_USER_POOL_ID;
 const clientId = process.env.COGNITO_CLIENT_ID;
-const aws_access_key_id = process.env.AWS_ACCESS_KEY_ID;
-const aws_secret_access_key = process.env.AWS_SECRET_ACCESS_KEY;
+const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID;
+const awsSecretAccessKeyId = process.env.AWS_SECRET_ACCESS_KEY;
 
 const cognito = new AWS.CognitoIdentityServiceProvider({
   region: region,
-  accessKeyId: aws_access_key_id,
-  secretAccessKey: aws_secret_access_key,
+  accessKeyId: awsAccessKeyId,
+  secretAccessKey: awsSecretAccessKeyId,
 });
 
 class Cognito {
@@ -25,7 +25,7 @@ class Cognito {
         Username: email,
         Password: password,
         UserAttributes: [
-          { Name: 'email', Value: email },
+          {Name: 'email', Value: email},
           // Add other attributes as needed
         ],
       };
@@ -117,8 +117,8 @@ class Cognito {
 
     try {
       const response = await this.cognitoIdentityServiceProvider
-        .listUsers(params)
-        .promise();
+          .listUsers(params)
+          .promise();
       return response.Users.length > 0;
     } catch (error) {
       console.error('Error in checking user existence:', error);

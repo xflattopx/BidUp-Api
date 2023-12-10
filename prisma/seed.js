@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 const Cognito = require('../classes/cognito'); // Adjust the path as needed
 const prisma = new PrismaClient();
 const cognito = new Cognito(); // Instantiate the Cognito class
@@ -62,9 +62,9 @@ async function main() {
 }
 
 main()
-  .catch(e => {
-    throw e;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+    .catch((e) => {
+      throw e;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });

@@ -1,7 +1,8 @@
 const express = require('express');
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 
 const prisma = new PrismaClient();
 router.use(cors());
@@ -11,12 +12,12 @@ router.get('/profile-request-details', async (req, res) => {
     const customerId = parseInt(req.query.customerId);
     if (isNaN(customerId)) {
       return res
-        .status(400)
-        .json({ success: false, error: 'Invalid customerId' });
+          .status(400)
+          .json({success: false, error: 'Invalid customerId'});
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: customerId },
+      where: {id: customerId},
       include: {
         DeliveryRequests: {
           select: {
@@ -34,14 +35,14 @@ router.get('/profile-request-details', async (req, res) => {
 
     if (!user) {
       return res
-        .status(404)
-        .json({ success: false, error: 'Customer not found' });
+          .status(404)
+          .json({success: false, error: 'Customer not found'});
     }
 
-    res.json({ success: true, data: user.DeliveryRequests });
+    res.json({success: true, data: user.DeliveryRequests});
   } catch (error) {
     console.error('Error fetching customer request history:', error);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    res.status(500).json({success: false, error: 'Internal Server Error'});
   }
 });
 
@@ -50,25 +51,25 @@ router.get('/profile-personal-details', async (req, res) => {
     const customerId = parseInt(req.query.customerId);
     if (isNaN(customerId)) {
       return res
-        .status(400)
-        .json({ success: false, error: 'Invalid customerId' });
+          .status(400)
+          .json({success: false, error: 'Invalid customerId'});
     }
 
     const customerProfile = await prisma.customer.findUnique({
-      where: { user_id: customerId },
+      where: {user_id: customerId},
       select: {
         first_name: true,
         last_name: true,
         User: {
-          select: { email: true },
+          select: {email: true},
         },
       },
     });
 
     if (!customerProfile) {
       return res
-        .status(404)
-        .json({ success: false, error: 'Customer not found' });
+          .status(404)
+          .json({success: false, error: 'Customer not found'});
     }
 
     // Combine customer details with email
@@ -78,10 +79,10 @@ router.get('/profile-personal-details', async (req, res) => {
       email: customerProfile.User.email,
     };
 
-    res.json({ success: true, customerProfile: response });
+    res.json({success: true, customerProfile: response});
   } catch (error) {
     console.error('Error fetching customer profile details:', error);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    res.status(500).json({success: false, error: 'Internal Server Error'});
   }
 });
 
@@ -90,13 +91,13 @@ router.post('/cancel-request', async (req, res) => {
     const requestId = parseInt(req.body.requestId);
     if (isNaN(requestId)) {
       return res
-        .status(400)
-        .json({ success: false, error: 'Invalid requestId' });
+          .status(400)
+          .json({success: false, error: 'Invalid requestId'});
     }
 
     const updatedRequest = await prisma.deliveryRequest.update({
-      where: { id: requestId },
-      data: { status: 'Canceled' },
+      where: {id: requestId},
+      data: {status: 'Canceled'},
       select: {
         id: true,
         pickup_location: true,
@@ -109,13 +110,13 @@ router.post('/cancel-request', async (req, res) => {
     });
 
     if (updatedRequest) {
-      res.json({ success: true, data: updatedRequest });
+      res.json({success: true, data: updatedRequest});
     } else {
-      res.status(404).json({ success: false, error: 'Request not found' });
+      res.status(404).json({success: false, error: 'Request not found'});
     }
   } catch (error) {
     console.error('Error canceling request:', error);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    res.status(500).json({success: false, error: 'Internal Server Error'});
   }
 });
 

@@ -1,7 +1,8 @@
 const express = require('express');
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 const Cognito = require('../classes/cognito'); // Import the Cognito class
 
 const prisma = new PrismaClient();
@@ -11,7 +12,7 @@ router.use(cors());
 router.use(express.json());
 
 router.post('/get-user', async (req, res) => {
-  const { email, password } = req.body;
+  const {email, password} = req.body;
 
   try {
     // Use Cognito for user authentication
@@ -20,22 +21,22 @@ router.post('/get-user', async (req, res) => {
     if (authResponse && authResponse.AuthenticationResult) {
       const token = authResponse.AuthenticationResult.AccessToken;
       const user = await prisma.user.findUnique({
-        where: { email: email },
+        where: {email: email},
       });
 
       if (user) {
         res
-          .status(200)
-          .json({ token, role: user.role, user_id: user.id, email });
+            .status(200)
+            .json({token, role: user.role, user_id: user.id, email});
       } else {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({error: 'User not found'});
       }
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({error: 'Invalid credentials'});
     }
   } catch (error) {
     console.error('Error in user authentication:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({error: 'Internal Server Error'});
   }
 });
 

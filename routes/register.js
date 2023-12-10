@@ -1,7 +1,8 @@
 const express = require('express');
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 const Cognito = require('../classes/cognito'); // Import the Cognito class
 
 const prisma = new PrismaClient();
@@ -11,7 +12,7 @@ router.use(cors());
 
 router.post('/sign-up', async (req, res) => {
   try {
-    const { first_name, last_name, email, password, role } = req.body;
+    const {first_name, last_name, email, password, role} = req.body;
 
     if (
       !email ||
@@ -19,29 +20,25 @@ router.post('/sign-up', async (req, res) => {
       !role ||
       (role === 'Customer' && (!first_name || !last_name))
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Bad Request: Missing required fields',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Bad Request: Missing required fields',
+      });
     }
 
     if (role !== 'Driver' && role !== 'Customer') {
       return res
-        .status(400)
-        .json({ success: false, message: 'Bad Request: Invalid role' });
+          .status(400)
+          .json({success: false, message: 'Bad Request: Invalid role'});
     }
 
     // Check if user already exists in Cognito
     const userExists = await cognito.doesUserExist(email);
     if (userExists) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message: 'Conflict: Email already exists in Cognito',
-        });
+      return res.status(409).json({
+        success: false,
+        message: 'Conflict: Email already exists in Cognito',
+      });
     }
 
     // Register user in AWS Cognito
@@ -63,7 +60,7 @@ router.post('/sign-up', async (req, res) => {
     });
 
     if (role === 'Driver') {
-      await prisma.driver.create({ data: { user_id: newUser.id } });
+      await prisma.driver.create({data: {user_id: newUser.id}});
     } else {
       await prisma.customer.create({
         data: {
@@ -74,24 +71,22 @@ router.post('/sign-up', async (req, res) => {
       });
     }
 
-    return res
-      .status(201)
-      .json({
-        success: true,
-        message: 'User registered successfully',
-        userId: newUser.id,
-        role,
-      });
+    return res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      userId: newUser.id,
+      role,
+    });
   } catch (error) {
     if (error.code === 'P2002') {
       return res
-        .status(409)
-        .json({ success: false, message: 'Conflict: Email already exists' });
+          .status(409)
+          .json({success: false, message: 'Conflict: Email already exists'});
     }
     console.error('Error during registration:', error);
     return res
-      .status(500)
-      .json({ success: false, message: 'Internal Server Error' });
+        .status(500)
+        .json({success: false, message: 'Internal Server Error'});
   }
 });
 

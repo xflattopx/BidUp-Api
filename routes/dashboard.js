@@ -1,14 +1,15 @@
 const express = require('express');
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
 router.use(cors());
 
 router.get('/accepted-bids', async (req, res) => {
   try {
-    const { userId } = req.query;
+    const {userId} = req.query;
 
     const acceptedBids = await prisma.deliveryRequest.findMany({
       where: {
@@ -34,7 +35,7 @@ router.get('/accepted-bids', async (req, res) => {
     });
 
     // Format the response to match the expected structure in the frontend
-    const formattedBids = acceptedBids.map(bid => ({
+    const formattedBids = acceptedBids.map((bid) => ({
       delivery_request_id: bid.id,
       pickup_location: bid.pickup_location,
       dropoff_location: bid.dropoff_location,
@@ -45,7 +46,7 @@ router.get('/accepted-bids', async (req, res) => {
     res.json(formattedBids);
   } catch (error) {
     console.error('Error fetching accepted bids:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({error: 'Internal Server Error'});
   }
 });
 

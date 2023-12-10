@@ -10,7 +10,9 @@
     "db:seed": "node prisma/seed.js",
     "db:remove_users": "node prisma/remove_users.js",
     "prettier-check": "prettier --check .",
-    "prettier-write": "prettier --write ."
+    "prettier-write": "prettier --write .",
+    "lint": "eslint ."
+
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.0",
@@ -32,7 +34,19 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
+    "eslint": "^8.55.0",
+    "eslint-config-google": "^0.14.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "prettier": "^3.1.1",
     "prisma": "^3.15.2"
+  },
+  "lint-staged": {
+    "*.js": "eslint"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }

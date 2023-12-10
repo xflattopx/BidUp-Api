@@ -1,15 +1,16 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+// eslint-disable-next-line new-cap
+const router = express.Router();
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 
 const prisma = new PrismaClient();
 router.use(cors());
 
 router.use(cors());
 
-router.post('/', async function (req, res, next) {
-  var requestData = req.body;
+router.post('/', async function(req, res, next) {
+  const requestData = req.body;
 
   // Validate the required fields
   if (
@@ -20,8 +21,8 @@ router.post('/', async function (req, res, next) {
     requestData.priceOffer === undefined
   ) {
     return res
-      .status(400)
-      .json({ success: false, error: 'Missing required fields' });
+        .status(400)
+        .json({success: false, error: 'Missing required fields'});
   }
 
   // Fix Later - @Frontend Change Required
@@ -43,11 +44,11 @@ router.post('/', async function (req, res, next) {
     return res.json(newDeliveryRequest);
   } catch (err) {
     console.error('Error storing data:', err);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    res.status(500).json({success: false, error: 'Internal Server Error'});
   }
 });
 
-router.get('/all', async function (req, res, next) {
+router.get('/all', async function(req, res, next) {
   try {
     const deliveryRequests = await prisma.deliveryRequest.findMany({
       where: {
@@ -60,7 +61,7 @@ router.get('/all', async function (req, res, next) {
     res.json(deliveryRequests);
   } catch (error) {
     console.error('Error retrieving rows:', error);
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    res.status(500).json({success: false, error: 'Internal Server Error'});
   }
 });
 

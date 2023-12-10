@@ -1,18 +1,19 @@
 const express = require('express');
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const cors = require('cors');
 const cron = require('node-cron');
-const { PrismaClient } = require('@prisma/client');
+const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
 router.use(cors());
 
 router.post('/record-bid', async (req, res, next) => {
-  const { deliveryRequestId, driverId, bidPrice } = req.body;
+  const {deliveryRequestId, driverId, bidPrice} = req.body;
 
   try {
     const deliveryRequest = await prisma.deliveryRequest.update({
-      where: { id: deliveryRequestId },
+      where: {id: deliveryRequestId},
       data: {
         bid_end_time: new Date(),
         status: 'Bidding',
@@ -21,11 +22,11 @@ router.post('/record-bid', async (req, res, next) => {
 
     if (!deliveryRequest) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Delivery request not found.' });
+          .status(404)
+          .json({success: false, message: 'Delivery request not found.'});
     }
 
-    const bid = await prisma.bid.create({
+    await prisma.bid.create({
       data: {
         driver_id: driverId,
         delivery_request_id: deliveryRequestId,
@@ -40,26 +41,26 @@ router.post('/record-bid', async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error recording bid:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    res.status(500).json({success: false, message: 'Internal server error.'});
   }
 });
 
 router.post('/update-bid', async (req, res) => {
-  const { bidId, newBidPrice, driverId } = req.body;
+  const {bidId, newBidPrice, driverId} = req.body;
 
   try {
     const bid = await prisma.bid.findUnique({
-      where: { id: bidId },
+      where: {id: bidId},
     });
 
     if (!bid) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Bid not found.' });
+          .status(404)
+          .json({success: false, message: 'Bid not found.'});
     }
 
     await prisma.bid.update({
-      where: { id: bidId },
+      where: {id: bidId},
       data: {
         bid_price: newBidPrice,
         driver_id: driverId,
@@ -67,47 +68,52 @@ router.post('/update-bid', async (req, res) => {
     });
 
     await prisma.deliveryRequest.update({
-      where: { id: bid.delivery_request_id },
+      where: {id: bid.delivery_request_id},
       data: {
         price_offer: newBidPrice,
       },
     });
 
-    res.json({ success: true, message: 'Bid updated successfully.' });
+    res.json({success: true, message: 'Bid updated successfully.'});
   } catch (error) {
     console.error('Error updating bid:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    res.status(500).json({success: false, message: 'Internal server error.'});
   }
 });
 
 router.post('/record-winning-bid', async (req, res) => {
-  const { bidId } = req.body;
+  const {bidId} = req.body;
 
   try {
     const updatedBid = await prisma.bid.update({
-      where: { id: bidId },
-      data: { status: 'Bidding' },
+      where: {id: bidId},
+      data: {status: 'Bidding'},
     });
 
     if (!updatedBid) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Bid not found.' });
+          .status(404)
+          .json({success: false, message: 'Bid not found.'});
     }
 
     await prisma.deliveryRequest.update({
-      where: { id: updatedBid.delivery_request_id },
-      data: { status: 'Bidding' },
+      where: {id: updatedBid.delivery_request_id},
+      data: {status: 'Bidding'},
     });
 
-    res.json({ success: true, message: 'Winning bid recorded successfully.' });
+    res.json({success: true, message: 'Winning bid recorded successfully.'});
   } catch (error) {
     console.error('Error recording winning bid:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    res.status(500).json({success: false, message: 'Internal server error.'});
   }
 });
 
-// Schedule a task to check bids every minute
+// Schedule a task to check and process bids every minute
+/**
+ * Scheduled task to check and process bids every minute.
+ * Fetches eligible bids, updates their status, processes them, and
+ * updates corresponding delivery requests.
+ */
 cron.schedule('* * * * *', async () => {
   try {
     // Step 1: Fetch eligible bids
@@ -130,8 +136,8 @@ cron.schedule('* * * * *', async () => {
     // Step 2: Update fetched bids status to 'Sold'
     for (const bid of bidsToUpdate) {
       await prisma.bid.update({
-        where: { id: bid.id },
-        data: { status: 'Sold' },
+        where: {id: bid.id},
+        data: {status: 'Sold'},
       });
     }
 
@@ -147,22 +153,22 @@ cron.schedule('* * * * *', async () => {
       // If no winning bid exists, insert a new one
       if (!existingWinningBid) {
         await prisma.winningBid
-          .create({
-            data: {
-              bid_id: bid.id, // Assuming this is the correct field name
-              delivery_request_id: bid.delivery_request_id,
-            },
-          })
-          .catch(error => {
+            .create({
+              data: {
+                bid_id: bid.id, // Assuming this is the correct field name
+                delivery_request_id: bid.delivery_request_id,
+              },
+            })
+            .catch((error) => {
             // Handle any other errors
-            console.error('Error inserting winning bid:', error);
-          });
+              console.error('Error inserting winning bid:', error);
+            });
       }
 
       // Update corresponding delivery request status to 'Sold'
       await prisma.deliveryRequest.update({
-        where: { id: bid.delivery_request_id },
-        data: { status: 'Sold' },
+        where: {id: bid.delivery_request_id},
+        data: {status: 'Sold'},
       });
     }
   } catch (error) {
