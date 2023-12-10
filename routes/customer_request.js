@@ -29,7 +29,6 @@ router.post('/', async function(req, res, next) {
   const priceOffer = parseFloat(requestData.priceOffer);
 
   try {
-    // Use Prisma to insert data
     const newDeliveryRequest = await prisma.deliveryRequest.create({
       data: {
         pickup_location: requestData.pickupLocation,

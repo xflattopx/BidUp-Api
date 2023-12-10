@@ -112,15 +112,14 @@ cron.schedule('* * * * *', async () => {
       where: {
         status: 'Bidding',
         bid_time: {
-          lt: new Date(Date.now() - 5 * 60000), // 5 minutes ago
+          lt: new Date(Date.now() - 5 * 60000),
         },
         delivery_requests: {
-          // Corrected relationship field name
           status: 'Bidding',
         },
       },
       include: {
-        delivery_requests: true, // Corrected relationship field name
+        delivery_requests: true,
       },
     });
 
@@ -146,12 +145,11 @@ cron.schedule('* * * * *', async () => {
         await prisma.winningBid
             .create({
               data: {
-                bid_id: bid.id, // Assuming this is the correct field name
+                bid_id: bid.id,
                 delivery_request_id: bid.delivery_request_id,
               },
             })
             .catch((error) => {
-            // Handle any other errors
               console.error('Error inserting winning bid:', error);
             });
       }
