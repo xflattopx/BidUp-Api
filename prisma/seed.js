@@ -3,21 +3,26 @@ const Cognito = require('../classes/cognito'); // Adjust the path as needed
 const prisma = new PrismaClient();
 const cognito = new Cognito(); // Instantiate the Cognito class
 
-async function main() {
-    const userDetails = [
+function generateRandomUserDetails() {
+    const timestamp = Date.now();
+    return [
         {
-            email: 'driver@example.com',
+            email: `driver${timestamp}@example.com`,
             password: 'Assword123!',
             role: 'Driver'
         },
         {
-            email: 'customer@example.com',
+            email: `customer${timestamp}@example.com`,
             password: 'Assword123!',
             role: 'Customer',
             first_name: 'John',
             last_name: 'Doe'
         }
     ];
+}
+
+async function main() {
+    const userDetails = generateRandomUserDetails();
 
     for (const user of userDetails) {
         try {
