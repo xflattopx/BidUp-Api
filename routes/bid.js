@@ -104,12 +104,7 @@ router.post('/record-winning-bid', async (req, res) => {
   }
 });
 
-// Schedule a task to check and process bids every minute
-/**
- * Scheduled task to check and process bids every minute.
- * Fetches eligible bids, updates their status, processes them, and
- * updates corresponding delivery requests.
- */
+
 cron.schedule('* * * * *', async () => {
   try {
     // Step 1: Fetch eligible bids
