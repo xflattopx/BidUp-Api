@@ -8,7 +8,9 @@
     "db:reset": "npx prisma migrate reset",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
-    "db:remove_users": "node prisma/remove_users.js"
+    "db:remove_users": "node prisma/remove_users.js",
+    "prettier-check": "prettier --check .",
+    "prettier-write": "prettier --write ."
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.0",
@@ -30,6 +32,7 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
+    "prettier": "^3.1.1",
     "prisma": "^3.15.2"
   }
 }

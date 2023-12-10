@@ -10,7 +10,9 @@ router.get('/profile-request-details', async (req, res) => {
   try {
     const customerId = parseInt(req.query.customerId);
     if (isNaN(customerId)) {
-      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Invalid customerId' });
     }
 
     const user = await prisma.user.findUnique({
@@ -24,14 +26,16 @@ router.get('/profile-request-details', async (req, res) => {
             description: true,
             preferred_delivery_time: true,
             price_offer: true,
-            status: true
-          }
-        }
-      }
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Customer not found' });
     }
 
     res.json({ success: true, data: user.DeliveryRequests });
@@ -45,7 +49,9 @@ router.get('/profile-personal-details', async (req, res) => {
   try {
     const customerId = parseInt(req.query.customerId);
     if (isNaN(customerId)) {
-      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Invalid customerId' });
     }
 
     const customerProfile = await prisma.customer.findUnique({
@@ -54,20 +60,22 @@ router.get('/profile-personal-details', async (req, res) => {
         first_name: true,
         last_name: true,
         User: {
-          select: { email: true }
-        }
-      }
+          select: { email: true },
+        },
+      },
     });
 
     if (!customerProfile) {
-      return res.status(404).json({ success: false, error: 'Customer not found' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Customer not found' });
     }
 
     // Combine customer details with email
     const response = {
       first_name: customerProfile.first_name,
       last_name: customerProfile.last_name,
-      email: customerProfile.User.email
+      email: customerProfile.User.email,
     };
 
     res.json({ success: true, customerProfile: response });
@@ -77,12 +85,13 @@ router.get('/profile-personal-details', async (req, res) => {
   }
 });
 
-
 router.post('/cancel-request', async (req, res) => {
   try {
     const requestId = parseInt(req.body.requestId);
     if (isNaN(requestId)) {
-      return res.status(400).json({ success: false, error: 'Invalid requestId' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Invalid requestId' });
     }
 
     const updatedRequest = await prisma.deliveryRequest.update({
@@ -95,8 +104,8 @@ router.post('/cancel-request', async (req, res) => {
         description: true,
         preferred_delivery_time: true,
         price_offer: true,
-        status: true
-      }
+        status: true,
+      },
     });
 
     if (updatedRequest) {
@@ -109,8 +118,5 @@ router.post('/cancel-request', async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
-
-
-
 
 module.exports = router;

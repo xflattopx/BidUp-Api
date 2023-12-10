@@ -2,15 +2,14 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-
 async function getUpdatedQueue() {
   try {
     return await prisma.deliveryRequest.findMany({
       where: {
         status: {
-          in: ['Pending', 'Bidding']
-        }
-      }
+          in: ['Pending', 'Bidding'],
+        },
+      },
     });
   } catch (error) {
     console.error('Error fetching updated queue:', error);
@@ -23,8 +22,8 @@ async function getProfileRequestDetails(customerId) {
     return await prisma.deliveryRequest.findMany({
       where: {
         customer: {
-          id: customerId
-        }
+          id: customerId,
+        },
       },
       select: {
         id: true,
@@ -33,8 +32,8 @@ async function getProfileRequestDetails(customerId) {
         description: true,
         preferred_delivery_time: true,
         price_offer: true,
-        status: true
-      }
+        status: true,
+      },
     });
   } catch (error) {
     console.error('Error fetching profile request details:', error);
@@ -42,8 +41,7 @@ async function getProfileRequestDetails(customerId) {
   }
 }
 
-
 module.exports = {
   getUpdatedQueue,
-  getProfileRequestDetails
+  getProfileRequestDetails,
 };

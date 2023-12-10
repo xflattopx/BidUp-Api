@@ -12,14 +12,13 @@ var customerRequestRouter = require('./routes/customer_request.js');
 var bidRouter = require('./routes/bid.js');
 var dashboardRouter = require('./routes/dashboard.js');
 var profileRouter = require('./routes/profile.js');
-var registrationRouter = require('./routes/register.js')
+var registrationRouter = require('./routes/register.js');
 var loginRouter = require('./routes/login.js');
 var dotenv = require('dotenv');
 dotenv.config();
 
 // Load environment variables from the appropriate .env file
-console.log(process.env.NODE_ENV)
-
+console.log(process.env.NODE_ENV);
 
 // Create an Express application
 var app = express();
@@ -39,8 +38,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-
 // Route setup
 app.use('/customer_request', customerRequestRouter);
 app.use('/bid', bidRouter);
@@ -50,12 +47,12 @@ app.use('/register', registrationRouter);
 app.use('/auth', loginRouter);
 
 // Catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // Error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // Set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -64,7 +61,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error'); // Make sure you have an 'error' view file
 });
-
 
 // Export the Express application
 module.exports = app;
