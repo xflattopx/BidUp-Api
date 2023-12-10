@@ -12,7 +12,6 @@
     "prettier-check": "prettier --check .",
     "prettier-write": "prettier --write .",
     "lint": "eslint ."
-
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.0",

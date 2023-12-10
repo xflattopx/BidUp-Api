@@ -54,9 +54,7 @@ router.post('/update-bid', async (req, res) => {
     });
 
     if (!bid) {
-      return res
-          .status(404)
-          .json({success: false, message: 'Bid not found.'});
+      return res.status(404).json({success: false, message: 'Bid not found.'});
     }
 
     await prisma.bid.update({
@@ -91,9 +89,7 @@ router.post('/record-winning-bid', async (req, res) => {
     });
 
     if (!updatedBid) {
-      return res
-          .status(404)
-          .json({success: false, message: 'Bid not found.'});
+      return res.status(404).json({success: false, message: 'Bid not found.'});
     }
 
     await prisma.deliveryRequest.update({

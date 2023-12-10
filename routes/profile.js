@@ -90,9 +90,7 @@ router.post('/cancel-request', async (req, res) => {
   try {
     const requestId = parseInt(req.body.requestId);
     if (isNaN(requestId)) {
-      return res
-          .status(400)
-          .json({success: false, error: 'Invalid requestId'});
+      return res.status(400).json({success: false, error: 'Invalid requestId'});
     }
 
     const updatedRequest = await prisma.deliveryRequest.update({

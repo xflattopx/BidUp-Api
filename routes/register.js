@@ -12,13 +12,13 @@ router.use(cors());
 
 router.post('/sign-up', async (req, res) => {
   try {
-    const {first_name, last_name, email, password, role} = req.body;
+    const {firstName, lastName, email, password, role} = req.body;
 
     if (
       !email ||
       !password ||
       !role ||
-      (role === 'Customer' && (!first_name || !last_name))
+      (role === 'Customer' && (!firstName || !lastName))
     ) {
       return res.status(400).json({
         success: false,
@@ -65,8 +65,8 @@ router.post('/sign-up', async (req, res) => {
       await prisma.customer.create({
         data: {
           user_id: newUser.id,
-          first_name: first_name,
-          last_name: last_name,
+          first_name: firstName,
+          last_name: lastName,
         },
       });
     }

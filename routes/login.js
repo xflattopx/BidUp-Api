@@ -25,9 +25,7 @@ router.post('/get-user', async (req, res) => {
       });
 
       if (user) {
-        res
-            .status(200)
-            .json({token, role: user.role, user_id: user.id, email});
+        res.status(200).json({token, role: user.role, user_id: user.id, email});
       } else {
         res.status(404).json({error: 'User not found'});
       }
