@@ -7,8 +7,6 @@ const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 router.use(cors());
 
-router.use(cors());
-
 router.post('/', async function(req, res, next) {
   const requestData = req.body;
 

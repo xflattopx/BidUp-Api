@@ -104,7 +104,6 @@ router.post('/record-winning-bid', async (req, res) => {
   }
 });
 
-
 cron.schedule('* * * * *', async () => {
   try {
     // Step 1: Fetch eligible bids
