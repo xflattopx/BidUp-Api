@@ -163,7 +163,4 @@ cron.schedule('* * * * *', async () => {
   }
 });
 
-
-
-
 module.exports = router;
