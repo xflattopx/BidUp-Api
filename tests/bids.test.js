@@ -22,7 +22,6 @@ jest.mock("@prisma/client", () => {
   return {
     PrismaClient: jest.fn().mockImplementation(() => ({
       deliveryRequest: {
-        create: jest.fn().mockResolvedValue(mockDeliveryRequest),
         update: jest.fn().mockResolvedValue(mockDeliveryRequest),
       },
       bid: {

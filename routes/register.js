@@ -22,10 +22,10 @@ router.post('/sign-up', async (req, res) => {
         }
 
         // Check if user already exists in Cognito
-        const userExists = await cognito.doesUserExist(email);
-        if (userExists) {
-            return res.status(409).json({ success: false, message: "Conflict: Email already exists in Cognito" });
-        }
+        // const userExists = await cognito.doesUserExist(email);
+        // if (userExists) {
+        //     return res.status(409).json({ success: false, message: "Conflict: Email already exists in Cognito" });
+        // }
 
         // Register user in AWS Cognito
         const cognitoResponse = await cognito.signUp(email, password);
