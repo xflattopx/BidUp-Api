@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 router.use(cors());
 
 
-router.post('/record-bid', async (req, res, next) => {
+router.post('/record-bid', async (req, res) => {
   const { deliveryRequestId, driverId, bidPrice } = req.body;
 
   try {
@@ -25,7 +25,7 @@ router.post('/record-bid', async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Delivery request not found.' });
     }
 
-    const bid = await prisma.bid.create({
+    await prisma.bid.create({
       data: {
         driver_id: driverId,
         delivery_request_id: deliveryRequestId,

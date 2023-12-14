@@ -6,9 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 router.use(cors());
 
-router.use(cors());
-
-router.post('/', async function (req, res, next) {
+router.post('/', async function (req, res) {
   var requestData = req.body;
 
   // Validate the required fields
@@ -40,7 +38,7 @@ router.post('/', async function (req, res, next) {
   }
 });
 
-router.get('/all', async function (req, res, next) {
+router.get('/all', async function (req, res) {
   try {
     const deliveryRequests = await prisma.deliveryRequest.findMany({
       where: {
