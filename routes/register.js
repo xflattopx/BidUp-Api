@@ -10,9 +10,8 @@ const cognito = new Cognito(); // Instantiate the Cognito class
 router.use(cors());
 
 router.post("/sign-up", async (req, res) => {
+  let newUser;
 
-    let newUser;
-    
   try {
     const { first_name, last_name, email, password, role } = req.body;
 
@@ -22,12 +21,10 @@ router.post("/sign-up", async (req, res) => {
       !role ||
       (role === "Customer" && (!first_name || !last_name))
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Bad Request: Missing required fields",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Bad Request: Missing required fields",
+      });
     }
 
     if (role !== "Driver" && role !== "Customer") {
@@ -43,12 +40,10 @@ router.post("/sign-up", async (req, res) => {
     });
 
     if (existingUser) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message: "Conflict: Email already exists in database",
-        });
+      return res.status(409).json({
+        success: false,
+        message: "Conflict: Email already exists in database",
+      });
     }
 
     try {
@@ -79,25 +74,21 @@ router.post("/sign-up", async (req, res) => {
       }
     } catch (error) {
       if (error.code === "UsernameExistsException") {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "Conflict: Email already exists in Cognito",
-          });
+        return res.status(409).json({
+          success: false,
+          message: "Conflict: Email already exists in Cognito",
+        });
       } else {
         throw error; // re-throw the error for the outer catch block
       }
     }
 
-    return res
-      .status(201)
-      .json({
-        success: true,
-        message: "User registered successfully",
-        userId: newUser,
-        role,
-      });
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      userId: newUser,
+      role,
+    });
   } catch (error) {
     if (error.code === "P2002") {
       return res
