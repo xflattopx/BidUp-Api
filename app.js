@@ -10,7 +10,6 @@ const runCronJob = require('./services/cron.js');
 
 
 // Import your route files
-var indexRouter = require('./routes/index.js');
 var customerRequestRouter = require('./routes/customer_request.js');
 var bidRouter = require('./routes/bid.js');
 var dashboardRouter = require('./routes/dashboard.js');
@@ -38,7 +37,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Route setup
-app.use('/', indexRouter);
 app.use('/customer_request', customerRequestRouter);
 app.use('/bid', bidRouter);
 app.use('/dashboard', dashboardRouter);
