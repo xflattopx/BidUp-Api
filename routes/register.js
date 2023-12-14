@@ -58,7 +58,7 @@ router.post("/sign-up", async (req, res) => {
       await cognito.adminConfirmSignUp(email);
 
       // Create user in the database with cognitoId
-      const newUser = await prisma.user.create({
+      newUser = await prisma.user.create({
         data: {
           email: email,
           role: role,
