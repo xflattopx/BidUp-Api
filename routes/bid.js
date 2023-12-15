@@ -20,6 +20,7 @@ router.post('/record-bid', async (req, res) => {
     });
 
     if (!deliveryRequest) {
+      // Need to cover error 404
       return res.status(404).json({ success: false, message: 'Delivery request not found.' });
     }
 
@@ -33,6 +34,7 @@ router.post('/record-bid', async (req, res) => {
 
     res.json({ success: true, message: 'Bid recorded successfully.', requestId: deliveryRequestId });
   } catch (error) {
+    // Need to cover error 500
     console.error('Error recording bid:', error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
@@ -47,6 +49,7 @@ router.post('/update-bid', async (req, res) => {
     });
 
     if (!bid) {
+      // Need to cover error 404
       return res.status(404).json({ success: false, message: 'Bid not found.' });
     }
 
@@ -64,9 +67,10 @@ router.post('/update-bid', async (req, res) => {
         price_offer: newBidPrice
       }
     });
-
+    
     res.json({ success: true, message: 'Bid updated successfully.' });
   } catch (error) {
+    // Need to cover Error 500
     console.error('Error updating bid:', error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
@@ -82,6 +86,7 @@ router.post('/record-winning-bid', async (req, res) => {
     });
 
     if (!updatedBid) {
+      // Need to cover error 404
       return res.status(404).json({ success: false, message: 'Bid not found.' });
     }
 
@@ -92,6 +97,7 @@ router.post('/record-winning-bid', async (req, res) => {
 
     res.json({ success: true, message: 'Winning bid recorded successfully.' });
   } catch (error) {
+    // Need to cover error 500
     console.error('Error recording winning bid:', error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
