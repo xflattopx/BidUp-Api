@@ -52,7 +52,7 @@ router.get('/', async function (req, res) {
   }
 });
 
-router.put('/cancel-request', async (req, res) => {
+router.put('/cancel', async (req, res) => {
   try {
     const requestId = parseInt(req.body.requestId);
     
@@ -81,6 +81,41 @@ router.put('/cancel-request', async (req, res) => {
     }
   } catch (error) {
     console.error('Error canceling request:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+router.get('/request-history', async (req, res) => {
+  try {
+    const customerId = parseInt(req.query.customerId);
+    if (isNaN(customerId)) {
+      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: customerId },
+      include: {
+        DeliveryRequests: {
+          select: {
+            id: true,
+            pickup_location: true,
+            dropoff_location: true,
+            description: true,
+            preferred_delivery_time: true,
+            price_offer: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    res.json({ success: true, data: user.DeliveryRequests });
+  } catch (error) {
+    console.error('Error fetching customer request history:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });

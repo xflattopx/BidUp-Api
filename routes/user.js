@@ -16,30 +16,31 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid customerId' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: customerId },
-      include: {
-        DeliveryRequests: {
-          select: {
-            id: true,
-            pickup_location: true,
-            dropoff_location: true,
-            description: true,
-            preferred_delivery_time: true,
-            price_offer: true,
-            status: true
-          }
+    const customerProfile = await prisma.customer.findUnique({
+      where: { user_id: customerId },
+      select: {
+        first_name: true,
+        last_name: true,
+        User: {
+          select: { email: true }
         }
       }
     });
 
-    if (!user) {
+    if (!customerProfile) {
       return res.status(404).json({ success: false, error: 'Customer not found' });
     }
 
-    res.json({ success: true, data: user.DeliveryRequests });
+    // Combine customer details with email
+    const response = {
+      first_name: customerProfile.first_name,
+      last_name: customerProfile.last_name,
+      email: customerProfile.User.email
+    };
+
+    res.json({ success: true, customerProfile: response });
   } catch (error) {
-    console.error('Error fetching customer request history:', error);
+    console.error('Error fetching customer profile details:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
