@@ -35,7 +35,7 @@ jest.mock("@prisma/client", () => {
 
 let server, request;
 
-describe("/record-bid", () => {
+describe("Record a Bid", () => {
   beforeAll(() => {
     server = app.listen(); // Start your app on a random free port
     request = supertest(server);
@@ -52,7 +52,7 @@ describe("/record-bid", () => {
       bidPrice: 100,
     };
 
-    const response = await request.post("/bid/record-bid").send(mockBidRequest);
+    const response = await request.post("/bid/").send(mockBidRequest);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -60,7 +60,7 @@ describe("/record-bid", () => {
   });
 });
 
-describe("/update-bid", () => {
+describe("Update a bid", () => {
   it("should update a bid successfully", async () => {
     const mockBidUpdateRequest = {
       bidId: 1,
@@ -69,7 +69,7 @@ describe("/update-bid", () => {
     };
 
     const response = await request
-      .post("/bid/update-bid")
+      .put("/bid/")
       .send(mockBidUpdateRequest);
 
     expect(response.status).toBe(200);

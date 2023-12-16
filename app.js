@@ -10,12 +10,9 @@ const runCronJob = require('./services/cron.js');
 
 
 // Import your route files
-var customerRequestRouter = require('./routes/customer_request.js');
+var serviceRouter = require('./routes/service.js');
 var bidRouter = require('./routes/bid.js');
-var dashboardRouter = require('./routes/dashboard.js');
-var profileRouter = require('./routes/profile.js');
-var registrationRouter = require('./routes/register.js')
-var loginRouter = require('./routes/login.js');
+var userRouter = require('./routes/user.js');
 var dotenv = require('dotenv');
 dotenv.config();
 // Create an Express application
@@ -37,12 +34,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Route setup
-app.use('/customer_request', customerRequestRouter);
+app.use('/service', serviceRouter);
 app.use('/bid', bidRouter);
-app.use('/dashboard', dashboardRouter);
-app.use('/profile', profileRouter);
-app.use('/register', registrationRouter);
-app.use('/auth', loginRouter);
+app.use('/user', userRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(next) {

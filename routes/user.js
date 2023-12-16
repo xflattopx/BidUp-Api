@@ -9,6 +9,41 @@ const cognito = new Cognito(); // Instantiate the Cognito class
 
 router.use(cors());
 
+router.get('/', async (req, res) => {
+  try {
+    const customerId = parseInt(req.query.customerId);
+    if (isNaN(customerId)) {
+      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: customerId },
+      include: {
+        DeliveryRequests: {
+          select: {
+            id: true,
+            pickup_location: true,
+            dropoff_location: true,
+            description: true,
+            preferred_delivery_time: true,
+            price_offer: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    res.json({ success: true, data: user.DeliveryRequests });
+  } catch (error) {
+    console.error('Error fetching customer request history:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
 router.post("/sign-up", async (req, res) => {
   let newUser;
 
@@ -99,6 +134,33 @@ router.post("/sign-up", async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+router.post('/sign-in', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+      // Use Cognito for user authentication
+      const authResponse = await cognito.signIn(email, password);
+
+      if (authResponse && authResponse.AuthenticationResult) {
+          const token = authResponse.AuthenticationResult.AccessToken;
+          const user = await prisma.user.findUnique({
+              where: { email: email },
+          });
+
+          if (user) {
+              res.status(200).json({ token, role: user.role, user_id: user.id, email });
+          } else {
+              res.status(404).json({ error: 'User not found' });
+          }
+      } else {
+          res.status(401).json({ error: 'Invalid credentials' });
+      }
+  } catch (error) {
+      console.error('Error in user authentication:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

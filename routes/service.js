@@ -9,7 +9,6 @@ router.use(cors());
 router.post('/', async function (req, res) {
   var requestData = req.body;
 
-  // Validate the required fields
   if (!requestData.pickupLocation || !requestData.dropOffLocation || !requestData.description || !requestData.preferredDeliveryTime || requestData.priceOffer === undefined) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
   }
@@ -17,9 +16,7 @@ router.post('/', async function (req, res) {
   // Fix Later - @Frontend Change Required
   const priceOffer = parseFloat(requestData.priceOffer);
 
-
   try {
-      // Use Prisma to insert data
       const newDeliveryRequest = await prisma.deliveryRequest.create({
           data: {
               pickup_location: requestData.pickupLocation,
@@ -38,7 +35,7 @@ router.post('/', async function (req, res) {
   }
 });
 
-router.get('/all', async function (req, res) {
+router.get('/', async function (req, res) {
   try {
     const deliveryRequests = await prisma.deliveryRequest.findMany({
       where: {
@@ -51,6 +48,39 @@ router.get('/all', async function (req, res) {
     res.json(deliveryRequests);
   } catch (error) {
     console.error('Error retrieving rows:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+router.put('/cancel-request', async (req, res) => {
+  try {
+    const requestId = parseInt(req.body.requestId);
+    
+    if (isNaN(requestId)) {
+      return res.status(400).json({ success: false, error: 'Invalid requestId' });
+    }
+
+    const updatedRequest = await prisma.deliveryRequest.update({
+      where: { id: requestId },
+      data: { status: 'Canceled' },
+      select: {
+        id: true,
+        pickup_location: true,
+        dropoff_location: true,
+        description: true,
+        preferred_delivery_time: true,
+        price_offer: true,
+        status: true
+      }
+    });
+
+    if (updatedRequest) {
+      res.json({ success: true, data: updatedRequest });
+    } else {
+      res.status(404).json({ success: false, error: 'Request not found' });
+    }
+  } catch (error) {
+    console.error('Error canceling request:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
