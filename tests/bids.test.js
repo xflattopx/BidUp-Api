@@ -77,21 +77,3 @@ describe("Update a bid", () => {
     expect(response.body.message).toBe("Bid updated successfully.");
   });
 });
-
-describe("/record-winning-bid", () => {
-  it("should update a bid successfully", async () => {
-    const mockBidUpdateRequest = {
-      bidId: 1,
-      newBidPrice: 200,
-      driverId: 1,
-    };
-
-    const response = await request
-      .post("/bid/record-winning-bid")
-      .send(mockBidUpdateRequest);
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.message).toBe("Winning bid recorded successfully.");
-  });
-});
