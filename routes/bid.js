@@ -53,6 +53,15 @@ router.get('/accepted-bids', async (req, res) => {
 router.post('/', async (req, res) => {
   const { deliveryRequestId, driverId, bidPrice } = req.body;
 
+
+  const driver = await prisma.driver.findFirst(
+  {
+    where: {
+      user_id: driverId
+    }
+  }
+  )
+
   try {
     const deliveryRequest = await prisma.deliveryRequest.update({
       where: { id: deliveryRequestId },
@@ -70,7 +79,7 @@ router.post('/', async (req, res) => {
 
     await prisma.bid.create({
       data: {
-        driver_id: driverId,
+        driver_id: driver.id,
         delivery_request_id: deliveryRequestId,
         bid_price: bidPrice,
         status: 'Bidding'

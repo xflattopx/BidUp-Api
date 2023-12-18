@@ -16,6 +16,13 @@ router.post('/', async function (req, res) {
   // Fix Later - @Frontend Change Required
   const priceOffer = parseFloat(requestData.priceOffer);
 
+  // Todo: @Frontend Task - Change request for customer_id to user_id
+  // const customer = await prisma.customer.findFirst({
+  //   where: {
+  //     user_id: requestData.customerId
+  //   }
+  // })
+
   try {
       const newDeliveryRequest = await prisma.deliveryRequest.create({
           data: {
@@ -24,6 +31,7 @@ router.post('/', async function (req, res) {
               description: requestData.description,
               preferred_delivery_time: new Date(requestData.preferredDeliveryTime),
               price_offer: priceOffer,
+              initial_price_offer: priceOffer,
               user_id: requestData.customerId
           },
       });

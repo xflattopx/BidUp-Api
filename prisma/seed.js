@@ -6,12 +6,17 @@ const cognito = new Cognito(); // Instantiate the Cognito class
 async function main() {
     const userDetails = [
         {
-            email: 'driver@example.com',
+            email: 'driver100@example.com',
             password: 'Assword123!',
             role: 'Driver'
         },
         {
-            email: 'customer@example.com',
+            email: 'driver110@example.com',
+            password: 'Assword123!',
+            role: 'Driver'
+        },
+        {
+            email: 'customer100@example.com',
             password: 'Assword123!',
             role: 'Customer',
             first_name: 'John',
