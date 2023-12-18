@@ -8,52 +8,53 @@ generator client {
 }
 
 model User {
-  id               Int               @id @default(autoincrement())
-  email            String            @unique
-  cognitoId        String?           @unique
-  role             String
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @default(now())
-  Customer         Customer?
-  Driver           Driver?
-  DeliveryRequests DeliveryRequest[]
+  id         Int          @id @default(autoincrement())
+  email      String       @unique
+  cognitoId  String?      @unique
+  role       String
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now())
+  Customer   Customer?
+  Driver     Driver?
 }
 
 model Customer {
-  id         Int      @id @default(autoincrement())
-  user_id    Int      @unique
-  first_name String
-  last_name  String
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-  User       User     @relation(fields: [user_id], references: [id])
+  id               Int               @id @default(autoincrement())
+  user_id          Int               @unique
+  first_name       String
+  last_name        String
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @default(now())
+  User             User              @relation(fields: [user_id], references: [id])
+  DeliveryRequests DeliveryRequest[]
 }
 
 model Driver {
-  id         Int      @id @default(autoincrement())
-  user_id    Int      @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-  User       User     @relation(fields: [user_id], references: [id])
+  id         Int          @id @default(autoincrement())
+  user_id    Int          @unique
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now())
+  User       User         @relation(fields: [user_id], references: [id])
   Bids       Bid[]
+  BidHistory BidHistory[]
 }
 
 model DeliveryRequest {
-  id                      Int         @id @default(autoincrement())
+  id                      Int          @id @default(autoincrement())
   pickup_location         String
   dropoff_location        String
   description             String
   preferred_delivery_time DateTime
-  price_offer             Float       @default(0)
-  initial_price_offer     Float       @default(0)
-  status                  String      @default("Pending")
-  user_id                 Int?
-  created_at              DateTime    @default(now())
-  updated_at              DateTime    @default(now())
+  price_offer             Float        @default(0)
+  initial_price_offer     Float        @default(0)
+  status                  String       @default("Pending")
+  customer_id             Int?
+  created_at              DateTime     @default(now())
+  updated_at              DateTime     @default(now())
   bid_end_time            DateTime?
-  User                    User?       @relation(fields: [user_id], references: [id])
+  Customer                Customer?    @relation(fields: [customer_id], references: [id])
   Bids                    Bid[]
-  WinningBid              WinningBid?
+  BidHistory              BidHistory[]
 }
 
 model Bid {
@@ -65,14 +66,25 @@ model Bid {
   status              String           @default("Pending")
   Driver              Driver?          @relation(fields: [driver_id], references: [id])
   delivery_requests   DeliveryRequest? @relation(fields: [delivery_request_id], references: [id])
-  WinningBid          WinningBid?
+  BidHistory          BidHistory[]
 }
 
-model WinningBid {
+model BidHistory {
+  id                  Int      @id @default(autoincrement())
+  bid_id              Int
+  driver_id           Int
   delivery_request_id Int
-  bid_id              Int             @unique
-  delivery_request    DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
-  Bid                 Bid             @relation(fields: [bid_id], references: [id])
+  bidPrice            Float
+  bidTime             DateTime
+  status              String
+  createdAt           DateTime @default(now())
 
-  @@id([delivery_request_id])
+  Bid             Bid             @relation(fields: [bid_id], references: [id])
+  Driver          Driver          @relation(fields: [driver_id], references: [id])
+  DeliveryRequest DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
+
+  @@index([bid_id], name: "idx_bid_history_bid_id")
+  @@index([driver_id], name: "idx_bid_history_driver_id")
+  @@index([delivery_request_id], name: "idx_bid_history_delivery_request_id")
+
 }
