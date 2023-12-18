@@ -74,10 +74,10 @@ model BidHistory {
   bid_id              Int
   driver_id           Int
   delivery_request_id Int
-  bidPrice            Float
-  bidTime             DateTime
+  bid_price            Float
+  bid_time             DateTime
   status              String
-  createdAt           DateTime @default(now())
+  created_at           DateTime @default(now())
 
   Bid             Bid             @relation(fields: [bid_id], references: [id])
   Driver          Driver          @relation(fields: [driver_id], references: [id])

@@ -17,11 +17,11 @@ router.post('/', async function (req, res) {
   const priceOffer = parseFloat(requestData.priceOffer);
 
   // Todo: @Frontend Task - Change request for customer_id to user_id
-  // const customer = await prisma.customer.findFirst({
-  //   where: {
-  //     user_id: requestData.customerId
-  //   }
-  // })
+  const customer = await prisma.customer.findFirst({
+    where: {
+      user_id: requestData.customerId
+    }
+  })
 
   try {
       const newDeliveryRequest = await prisma.deliveryRequest.create({
@@ -32,7 +32,7 @@ router.post('/', async function (req, res) {
               preferred_delivery_time: new Date(requestData.preferredDeliveryTime),
               price_offer: priceOffer,
               initial_price_offer: priceOffer,
-              user_id: requestData.customerId
+              customer_id: customer.id
           },
       });
 
@@ -95,13 +95,13 @@ router.put('/cancel', async (req, res) => {
 
 router.get('/request-history', async (req, res) => {
   try {
-    const customerId = parseInt(req.query.customerId);
-    if (isNaN(customerId)) {
-      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+    const userId = parseInt(req.query.customerId);
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid userId' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: customerId },
+    const user = await prisma.customer.findUnique({
+      where: { user_id: userId },
       include: {
         DeliveryRequests: {
           select: {

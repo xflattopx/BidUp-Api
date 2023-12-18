@@ -13,35 +13,49 @@ router.get('/accepted-bids', async (req, res) => {
 
     const acceptedBids = await prisma.deliveryRequest.findMany({
       where: {
-        Bids: {
+        BidHistory: {
           some: {
             status: 'Sold',
             Driver: {
-              user_id: parseInt(userId)
-            }
-          }
+              user_id: parseInt(userId),
+            },
+          },
         },
-        WinningBid: {
-          isNot: null
-        }
+        status: 'Sold', // Assuming that the delivery request status is 'Sold'
       },
       select: {
         id: true,
         pickup_location: true,
         dropoff_location: true,
         description: true,
-        price_offer: true
-      }
+        price_offer: true,
+        // If you need to include details from the winning bid in the history
+        BidHistory: {
+          where: {
+            status: 'Sold',
+            Driver: {
+              user_id: parseInt(userId),
+            },
+          },
+          select: {
+            bidPrice: true,
+          },
+        },
+      },
     });
 
-    // Format the response to match the expected structure in the frontend
-    const formattedBids = acceptedBids.map(bid => ({
-      delivery_request_id: bid.id,
-      pickup_location: bid.pickup_location,
-      dropoff_location: bid.dropoff_location,
-      description: bid.description,
-      price_offer: bid.price_offer
-    }));
+    // Format the response to include bid history details
+    const formattedBids = acceptedBids.map(bid => {
+      const winningBid = bid.BidHistory[0]; // Assuming there's only one winning bid per delivery request
+      return {
+        delivery_request_id: bid.id,
+        pickup_location: bid.pickup_location,
+        dropoff_location: bid.dropoff_location,
+        description: bid.description,
+        price_offer: bid.price_offer,
+        winning_bid_price: winningBid ? winningBid.bidPrice : null,
+      };
+    });
 
     res.json(formattedBids);
   } catch (error) {
@@ -49,6 +63,7 @@ router.get('/accepted-bids', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 router.post('/', async (req, res) => {
   const { deliveryRequestId, driverId, bidPrice } = req.body;

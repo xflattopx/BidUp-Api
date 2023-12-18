@@ -23,7 +23,7 @@ const runCronJob = () => {
             // Step 2: Process each delivery request
             for (const deliveryRequest of deliveryRequests) {
                 // Find the bid that matches the delivery request's price_offer
-                const matchingBid = deliveryRequest.Bids.find(bid => bid.bid_price === deliveryRequest.price_offer);
+                const matchingBid = deliveryRequest.bidhistory.find(bid => bid.bid_price === deliveryRequest.price_offer);
 
                 if (matchingBid) {
                     // Step 3: Mark the matching bid as 'Sold'
@@ -32,21 +32,16 @@ const runCronJob = () => {
                         data: { status: "Sold" },
                     });
 
-                    // Step 4: Update a Winning Bid in the Winning Bids table
-                    await prisma.winningBid.create({
-                        data: {
-                            bid_id: matchingBid.id,
-                            delivery_request_id: deliveryRequest.id,
-                        },
-                    }).catch((error) => {
-                        console.error("Error inserting winning bid:", error);
-                    });
-
-                    // Step 5: Mark the delivery request as 'Sold'
+                    // Step 4: Mark the delivery request as 'Sold'
                     await prisma.deliveryRequest.update({
                         where: { id: deliveryRequest.id },
                         data: { status: "Sold" },
                     });
+
+                    // Step 5: Prompt the winning driver to accept the request
+                    // If the Prompt is accepted
+                    // If the prompt is not accepted, find next lowest bid and contact this driver
+                    // loop this function until there are no drivers left
                 }
             }
         } catch (error) {
