@@ -40,7 +40,7 @@ describe("Registration API", () => {
     server.close(); // Close the server after the tests
   });
 
-  describe("/register/sign-up", () => {
+  describe("/user/sign-up", () => {
     it("should register a user successfully", async () => {
       const mockUserData = {
         first_name: "John",
@@ -50,14 +50,14 @@ describe("Registration API", () => {
         role: "Customer"
       };
 
-      const response = await request.post("/register/sign-up").send(mockUserData);
+      const response = await request.post("/user/sign-up").send(mockUserData);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("message", "User registered successfully");
     });
 
     it("should return 400 for missing required fields", async () => {
-      const response = await request.post("/register/sign-up").send({ email: "jane@example.com", password: "Password123" });
+      const response = await request.post("/user/sign-up").send({ email: "jane@example.com", password: "Password123" });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("message", "Bad Request: Missing required fields");

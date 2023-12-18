@@ -7,15 +7,68 @@ const prisma = new PrismaClient();
 
 router.use(cors());
 
-router.post('/record-bid', async (req, res) => {
+router.get('/accepted-bids', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    const acceptedBids = await prisma.deliveryRequest.findMany({
+      where: {
+        Bids: {
+          some: {
+            status: 'Sold',
+            Driver: {
+              user_id: parseInt(userId)
+            }
+          }
+        },
+        WinningBid: {
+          isNot: null
+        }
+      },
+      select: {
+        id: true,
+        pickup_location: true,
+        dropoff_location: true,
+        description: true,
+        price_offer: true
+      }
+    });
+
+    // Format the response to match the expected structure in the frontend
+    const formattedBids = acceptedBids.map(bid => ({
+      delivery_request_id: bid.id,
+      pickup_location: bid.pickup_location,
+      dropoff_location: bid.dropoff_location,
+      description: bid.description,
+      price_offer: bid.price_offer
+    }));
+
+    res.json(formattedBids);
+  } catch (error) {
+    console.error('Error fetching accepted bids:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/', async (req, res) => {
   const { deliveryRequestId, driverId, bidPrice } = req.body;
+
+
+  const driver = await prisma.driver.findFirst(
+  {
+    where: {
+      user_id: driverId
+    }
+  }
+  )
 
   try {
     const deliveryRequest = await prisma.deliveryRequest.update({
       where: { id: deliveryRequestId },
       data: {
         bid_end_time: new Date(),
-        status: 'Bidding'
+        status: 'Bidding',
+        price_offer: bidPrice
       }
     });
 
@@ -26,9 +79,10 @@ router.post('/record-bid', async (req, res) => {
 
     await prisma.bid.create({
       data: {
-        driver_id: driverId,
+        driver_id: driver.id,
         delivery_request_id: deliveryRequestId,
-        bid_price: bidPrice
+        bid_price: bidPrice,
+        status: 'Bidding'
       }
     });
 
@@ -40,7 +94,7 @@ router.post('/record-bid', async (req, res) => {
   }
 });
 
-router.post('/update-bid', async (req, res) => {
+router.put('/', async (req, res) => {
   const { bidId, newBidPrice, driverId } = req.body;
 
   try {
@@ -72,33 +126,6 @@ router.post('/update-bid', async (req, res) => {
   } catch (error) {
     // Need to cover Error 500
     console.error('Error updating bid:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
-  }
-});
-
-router.post('/record-winning-bid', async (req, res) => {
-  const { bidId } = req.body;
-
-  try {
-    const updatedBid = await prisma.bid.update({
-      where: { id: bidId },
-      data: { status: 'Bidding' }
-    });
-
-    if (!updatedBid) {
-      // Need to cover error 404
-      return res.status(404).json({ success: false, message: 'Bid not found.' });
-    }
-
-    await prisma.deliveryRequest.update({
-      where: { id: updatedBid.delivery_request_id },
-      data: { status: 'Bidding' }
-    });
-
-    res.json({ success: true, message: 'Winning bid recorded successfully.' });
-  } catch (error) {
-    // Need to cover error 500
-    console.error('Error recording winning bid:', error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 });

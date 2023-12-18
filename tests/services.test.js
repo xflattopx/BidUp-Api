@@ -29,16 +29,16 @@ let server, request;
 
 describe("Delivery Request API", () => {
   beforeAll(() => {
-    server = app.listen(); // Start your app on a random free port
+    server = app.listen();
     request = supertest(server);
   });
 
   afterAll(() => {
-    server.close(); // Close the server after the tests
+    server.close();
   });
 
-  describe("/customer_request/", () => {
-    it("should create a delivery request successfully", async () => {
+  describe("Create a Service Request", () => {
+    it("should create a service request successfully", async () => {
       const mockRequestData = {
         pickupLocation: "Pickup Location",
         dropOffLocation: "Dropoff Location",
@@ -48,16 +48,14 @@ describe("Delivery Request API", () => {
         customerId: 1,
       };
 
-      const response = await request
-        .post("/customer_request/")
-        .send(mockRequestData);
+      const response = await request.post("/service/").send(mockRequestData);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("id", 1);
     });
 
     it("should return 400 for missing required fields", async () => {
-      const response = await request.post("/customer_request/").send({});
+      const response = await request.post("/service/").send({});
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
@@ -67,9 +65,9 @@ describe("Delivery Request API", () => {
     });
   });
 
-  describe("/customer_request/all", () => {
+  describe("/service/", () => {
     it("should retrieve all delivery requests successfully", async () => {
-      const response = await request.get("/customer_request/all");
+      const response = await request.get("/service/");
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);

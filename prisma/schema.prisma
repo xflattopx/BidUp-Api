@@ -45,6 +45,7 @@ model DeliveryRequest {
   description             String
   preferred_delivery_time DateTime
   price_offer             Float       @default(0)
+  initial_price_offer     Float       @default(0)
   status                  String      @default("Pending")
   user_id                 Int?
   created_at              DateTime    @default(now())
@@ -62,16 +63,16 @@ model Bid {
   bid_price           Float
   bid_time            DateTime         @default(now())
   status              String           @default("Pending")
-  Driver              Driver?          @relation(fields: [driver_id], references: [user_id])
+  Driver              Driver?          @relation(fields: [driver_id], references: [id])
   delivery_requests   DeliveryRequest? @relation(fields: [delivery_request_id], references: [id])
   WinningBid          WinningBid?
 }
 
 model WinningBid {
   delivery_request_id Int
-  bid_id            Int             @unique
-  delivery_request  DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
-  Bid               Bid             @relation(fields: [bid_id], references: [id])
+  bid_id              Int             @unique
+  delivery_request    DeliveryRequest @relation(fields: [delivery_request_id], references: [id])
+  Bid                 Bid             @relation(fields: [bid_id], references: [id])
 
   @@id([delivery_request_id])
 }

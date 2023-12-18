@@ -9,6 +9,42 @@ const cognito = new Cognito(); // Instantiate the Cognito class
 
 router.use(cors());
 
+router.get('/', async (req, res) => {
+  try {
+    const customerId = parseInt(req.query.customerId);
+    if (isNaN(customerId)) {
+      return res.status(400).json({ success: false, error: 'Invalid customerId' });
+    }
+
+    const customerProfile = await prisma.customer.findUnique({
+      where: { user_id: customerId },
+      select: {
+        first_name: true,
+        last_name: true,
+        User: {
+          select: { email: true }
+        }
+      }
+    });
+
+    if (!customerProfile) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    // Combine customer details with email
+    const response = {
+      first_name: customerProfile.first_name,
+      last_name: customerProfile.last_name,
+      email: customerProfile.User.email
+    };
+
+    res.json({ success: true, customerProfile: response });
+  } catch (error) {
+    console.error('Error fetching customer profile details:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
 router.post("/sign-up", async (req, res) => {
   let newUser;
 
@@ -99,6 +135,33 @@ router.post("/sign-up", async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+router.post('/sign-in', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+      // Use Cognito for user authentication
+      const authResponse = await cognito.signIn(email, password);
+
+      if (authResponse && authResponse.AuthenticationResult) {
+          const token = authResponse.AuthenticationResult.AccessToken;
+          const user = await prisma.user.findUnique({
+              where: { email: email },
+          });
+
+          if (user) {
+              res.status(200).json({ token, role: user.role, user_id: user.id, email });
+          } else {
+              res.status(404).json({ error: 'User not found' });
+          }
+      } else {
+          res.status(401).json({ error: 'Invalid credentials' });
+      }
+  } catch (error) {
+      console.error('Error in user authentication:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

@@ -52,7 +52,7 @@ describe("/auth/get-user API", () => {
       password: "validPassword",
     };
 
-    const response = await request.post("/auth/get-user").send(mockLoginData);
+    const response = await request.post("/user/sign-in").send(mockLoginData);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("token");
