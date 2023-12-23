@@ -60,6 +60,19 @@ class Cognito {
     }
   }
 
+  async validateToken(token) {
+    try {
+      const params = {
+        AccessToken: token,
+      };
+      const userData = await cognito.getUser(params).promise();
+      return userData;
+    } catch (error) {
+      console.error("Error in validateToken:", error);
+      throw error;
+    }
+  }
+
   async signIn(username, password) {
     try {
       const params = {

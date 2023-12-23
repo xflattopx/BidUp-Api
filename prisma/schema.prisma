@@ -8,14 +8,15 @@ generator client {
 }
 
 model User {
-  id         Int          @id @default(autoincrement())
-  email      String       @unique
-  cognitoId  String?      @unique
-  role       String
-  created_at DateTime     @default(now())
-  updated_at DateTime     @default(now())
-  Customer   Customer?
-  Driver     Driver?
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  cognitoId    String?   @unique
+  access_token String?
+  role         String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
+  Customer     Customer?
+  Driver       Driver?
 }
 
 model Customer {
@@ -74,10 +75,10 @@ model BidHistory {
   bid_id              Int
   driver_id           Int
   delivery_request_id Int
-  bid_price            Float
-  bid_time             DateTime
+  bid_price           Float
+  bid_time            DateTime
   status              String
-  created_at           DateTime @default(now())
+  created_at          DateTime @default(now())
 
   Bid             Bid             @relation(fields: [bid_id], references: [id])
   Driver          Driver          @relation(fields: [driver_id], references: [id])
@@ -86,5 +87,4 @@ model BidHistory {
   @@index([bid_id], name: "idx_bid_history_bid_id")
   @@index([driver_id], name: "idx_bid_history_driver_id")
   @@index([delivery_request_id], name: "idx_bid_history_delivery_request_id")
-
 }

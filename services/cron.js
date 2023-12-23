@@ -1,13 +1,41 @@
 const cron = require("node-cron");
-
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const websockets = require('../classes/websockets');
+
+// notifyDriver function revised for WebSocket integration
+const notifyDriver = async (driverId) => {
+    try {
+        console.log("Sending Websocket");
+        websockets.sendToDriver(driverId, { type: 'newDeliveryRequest', content: 'You have a new delivery job!' });
+
+        return new Promise((resolve, reject) => {
+            const responseTimeout = setTimeout(() => {
+                reject(new Error('Response timeout'));
+            }, 30000);
+
+            websockets.once('responseFromDriver', (driverResponse) => {
+                clearTimeout(responseTimeout);
+                if (driverResponse.driverId === driverId && driverResponse.type === 'deliveryRequestResponse') {
+                    resolve(driverResponse.accepted);
+                }
+            });
+
+            websockets.on('error', (error) => {
+                reject(error);
+            });
+        });
+    } catch (error) {
+        console.error(`Error in notifying driver ${driverId}: ${error.message}`);
+        return false;
+    }
+};
+
+// Main cron job function
 const runCronJob = () => {
-    // Schedule a task to check bids every minute
     cron.schedule("* * * * *", async () => {
         try {
-            // Step 1: Find Delivery Requests in 'Bidding' status and check the timer
             const deliveryRequests = await prisma.deliveryRequest.findMany({
                 where: {
                     status: "Bidding",
@@ -16,32 +44,32 @@ const runCronJob = () => {
                     },
                 },
                 include: {
-                    Bids: true,
+                    Bids: {
+                        include: {
+                            Driver: true
+                        }
+                    },
                 },
             });
 
-            // Step 2: Process each delivery request
             for (const deliveryRequest of deliveryRequests) {
-                // Find the bid that matches the delivery request's price_offer
-                const matchingBid = deliveryRequest.bidhistory.find(bid => bid.bid_price === deliveryRequest.price_offer);
+                const sortedBids = deliveryRequest.Bids.sort((a, b) => a.bid_price - b.bid_price);
 
-                if (matchingBid) {
-                    // Step 3: Mark the matching bid as 'Sold'
-                    await prisma.bid.update({
-                        where: { id: matchingBid.id },
-                        data: { status: "Sold" },
-                    });
-
-                    // Step 4: Mark the delivery request as 'Sold'
-                    await prisma.deliveryRequest.update({
-                        where: { id: deliveryRequest.id },
-                        data: { status: "Sold" },
-                    });
-
-                    // Step 5: Prompt the winning driver to accept the request
-                    // If the Prompt is accepted
-                    // If the prompt is not accepted, find next lowest bid and contact this driver
-                    // loop this function until there are no drivers left
+                for (const bid of sortedBids) {
+                    if (bid.Driver) {
+                        const isAccepted = await notifyDriver(bid.Driver.id);
+                        if (isAccepted) {
+                            await prisma.bid.update({
+                                where: { id: bid.id },
+                                data: { status: "Accepted" },
+                            });
+                            await prisma.deliveryRequest.update({
+                                where: { id: deliveryRequest.id },
+                                data: { status: "Accepted" },
+                            });
+                            break; // Exit the loop once a driver accepts
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -49,6 +77,5 @@ const runCronJob = () => {
         }
     });
 };
-
 
 module.exports = runCronJob;
